@@ -1,0 +1,24 @@
+Berechnungsinformationen
+Anzahl Elemente 351667
+Anzahl Kanten 517798
+Anzahl Berechnungsschritte 35867
+
+
+Volumenbilanz:
+Volumen von Quelle Drain/Source in l: -24402604.19
+Volumen von Quelle Strasse in l: 308891.00
+Volumen auf allen Elementen in l: 1.#R
+Volumen durch Verluste in l: -1.#J
+Volumenaustausch DYNA -> GeoCPM in l: 0.00
+Volumenaustausch GeoCPM -> DYNA in l: 0.00
+
+Regen auf Oberflächenelemente GeoCPM in mm: 115.52
+
+Zeit - Gesamtdauer          : 40539262.00
+Zeit - Zeitschrittberechnung: 141.00
+Zeit - Randbedingungen      : 3699059.00
+     Zeit - Randbedingungen - Source and Drain: 357751.00
+     Zeit - Randbedingungen - Schaechte       : 860468.00
+     Zeit - Randbedingungen - Dreieckselemente: 2480840.00
+Zeit - Saint-Venant'sche DGL: 6153745.00
+Zeit - Overhead             : 32.00
