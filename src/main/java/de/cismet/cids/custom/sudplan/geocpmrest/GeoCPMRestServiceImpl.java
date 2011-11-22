@@ -54,6 +54,8 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
     private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\GeoCPM.exe";                            // NOI18N
     private static final String LAUNCHER_EXE = "c:\\users\\wupp-model\\desktop\\launcher\\launcher.exe"; // NOI18N
 
+    private static final String GEOCPM_CONFIG_FOLDER = "c:\\users\\wupp-model\\desktop\\geocpm_configs"; // NOI18N
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -72,7 +74,9 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
     @Override
     public String runGeoCPM(final GeoCPMInput input) {
         try {
-            final File outFile = GeoCPMUtils.writeInput(input);
+            final File configFolder = new File(GEOCPM_CONFIG_FOLDER);
+            final File config = new File(configFolder, input.configName);
+            final File outFile = GeoCPMUtils.writeInput(input, config);
             final String command = LAUNCHER_EXE
                         + " -w "       // NOI18N
                         + outFile.getParentFile().getAbsolutePath()

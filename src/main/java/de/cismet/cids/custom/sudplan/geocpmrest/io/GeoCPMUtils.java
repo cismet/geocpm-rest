@@ -42,6 +42,7 @@ public final class GeoCPMUtils {
     public static final String PID_FILE = "GeoCPM.pid";                 // NOI18N
     public static final String EXEC_STATUS_FINISHED = "Finished";       // NOI18N
     public static final String EXEC_STATUS_BROKEN = "Broken";           // NOI18N
+    public static final String TOKEN_RAINCURVE = "RAINCURVE";           // NOI18N
 
     //~ Constructors -----------------------------------------------------------
 
@@ -56,7 +57,8 @@ public final class GeoCPMUtils {
     /**
      * Writes a given {@link GeoCPMInput} to a newly created working directory and returns a handle to the input file.
      *
-     * @param   input  the <code>GeoCPMInput</code> for a run
+     * @param   input   the <code>GeoCPMInput</code> for a run
+     * @param   config  DOCUMENT ME!
      *
      * @return  a handle to the written <code>GeoCPMInput</code>
      *
@@ -64,15 +66,23 @@ public final class GeoCPMUtils {
      * @throws  IllegalStateException     if the given input's content is <code>null</code> or the file cannot be
      *                                    written for any reason
      */
-    public static File writeInput(final GeoCPMInput input) {
+    public static File writeInput(final GeoCPMInput input, final File config) {
         if (input == null) {
-            throw new IllegalArgumentException("input must not be null");         // NOI18N
+            throw new IllegalArgumentException("input must not be null");            // NOI18N
         }
-        if (input.content == null) {
-            throw new IllegalStateException("content of input must not be null"); // NOI18N
+        if (input.rainevent == null) {
+            throw new IllegalStateException("timeseries of input must not be null"); // NOI18N
+        }
+        if (config == null) {
+            throw new IllegalStateException("config must not be null");              // NOI18N
+        } else if (!config.exists()) {
+            throw new IllegalStateException("config must exist");                    // NOI18N
+        } else if (!config.canRead()) {
+            throw new IllegalStateException("config must be readable");              // NOI18N
         }
 
         BufferedWriter bw = null;
+        BufferedReader br = null;
         try {
             final File tmpDir = new File(System.getProperty("java.io.tmpdir"));           // NOI18N
             final File outDir = new File(tmpDir, "geocpm_" + System.currentTimeMillis()); // NOI18N
@@ -81,14 +91,30 @@ public final class GeoCPMUtils {
             }
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("writing input to file: " + outDir.getAbsolutePath());
+                LOG.debug("writing input to dir: " + outDir.getAbsolutePath()); // NOI18N
             }
 
             final File outFile = new File(outDir, INPUT_FILE_NAME);
 
             bw = new BufferedWriter(new FileWriter(outFile));
+            br = new BufferedReader(new FileReader(config));
 
-            bw.write(input.content);
+            String line = br.readLine();
+
+            while (line != null) {
+                if (line.startsWith(TOKEN_RAINCURVE)) {
+                    // we assume that the raincurve is the very last block in the input file
+                    break;
+                } else {
+                    bw.write(line);
+                    bw.newLine();
+                }
+
+                line = br.readLine();
+            }
+
+            bw.newLine();
+            bw.write(input.rainevent);
 
             return outFile;
         } catch (final IOException e) {
@@ -101,6 +127,13 @@ public final class GeoCPMUtils {
                     bw.close();
                 } catch (final IOException e) {
                     LOG.warn("cannot close writer", e);                        // NOI18N
+                }
+            }
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (final IOException e) {
+                    LOG.warn("cannot close reader", e);                        // NOI18N
                 }
             }
         }
@@ -197,6 +230,11 @@ public final class GeoCPMUtils {
                 sb.append((char)c);
 
                 c = br.read();
+
+                // FIXME: this is a limit for the demo system
+                if (sb.length() > 16666) {
+                    break;
+                }
             }
         } finally {
             if (br != null) {

@@ -122,21 +122,67 @@ public class GeoCPMUtilsTest {
     public void testWriteInput_NullArg() {
         System.out.println("TEST " + getCurrentMethodName());
 
-        GeoCPMUtils.writeInput(null);
+        GeoCPMUtils.writeInput(null, null);
     }
 
     /**
      * DOCUMENT ME!
      */
     @Test(expected = IllegalStateException.class)
-    public void testWriteInput_NullContent() {
+    public void testWriteInput_NullRainevent() {
         System.out.println("TEST " + getCurrentMethodName());
 
         final GeoCPMInput input = new GeoCPMInput();
-        input.content = null;
+        input.rainevent = null;
 
-        GeoCPMUtils.writeInput(input);
+        GeoCPMUtils.writeInput(input, null);
     }
+
+    /**
+     * DOCUMENT ME!
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testWriteInput_NullConfig() {
+        System.out.println("TEST " + getCurrentMethodName());
+
+        final GeoCPMInput input = new GeoCPMInput();
+        input.rainevent = "";
+
+        GeoCPMUtils.writeInput(input, null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testWriteInput_NullConfigNotExisting() {
+        System.out.println("TEST " + getCurrentMethodName());
+
+        final GeoCPMInput input = new GeoCPMInput();
+        input.rainevent = "";
+
+        GeoCPMUtils.writeInput(input, new File(String.valueOf(System.currentTimeMillis())));
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testWriteInput_NullConfigNotReadable() throws Exception {
+        System.out.println("TEST " + getCurrentMethodName());
+
+        final GeoCPMInput input = new GeoCPMInput();
+        input.rainevent = "";
+
+        final File config = new File(workingDir, String.valueOf(System.currentTimeMillis()));
+        config.createNewFile();
+        config.setReadable(false);
+
+        GeoCPMUtils.writeInput(input, config);
+    }
+
     /**
      * combined test to ensure read and write are bijective.
      *
@@ -147,9 +193,20 @@ public class GeoCPMUtilsTest {
         System.out.println("TEST " + getCurrentMethodName());
 
         final GeoCPMInput input = new GeoCPMInput();
-        input.content = "TestString\nsecondline\nThirdline$$%";
+        input.rainevent = "TestString\nsecondline\nThirdline$$%";
 
-        File f = GeoCPMUtils.writeInput(input);
+        final File config = new File(workingDir, String.valueOf(System.currentTimeMillis()));
+        config.createNewFile();
+        final BufferedWriter bw = new BufferedWriter(new FileWriter(config));
+        bw.write("ABCDEFG");
+        bw.newLine();
+        bw.write("HIJKLM  ");
+        bw.newLine();
+        bw.newLine();
+        bw.flush();
+        bw.close();
+
+        File f = GeoCPMUtils.writeInput(input, config);
 
         BufferedReader r = new BufferedReader(new FileReader(f));
         String line;
@@ -158,14 +215,30 @@ public class GeoCPMUtilsTest {
             ++lineCount;
             switch (lineCount) {
                 case 1: {
-                    assertEquals("TestString", line);
+                    assertEquals("ABCDEFG", line);
                     break;
                 }
                 case 2: {
-                    assertEquals("secondline", line);
+                    assertEquals("HIJKLM  ", line);
                     break;
                 }
                 case 3: {
+                    assertEquals("", line);
+                    break;
+                }
+                case 4: {
+                    assertEquals("", line);
+                    break;
+                }
+                case 5: {
+                    assertEquals("TestString", line);
+                    break;
+                }
+                case 6: {
+                    assertEquals("secondline", line);
+                    break;
+                }
+                case 7: {
                     assertEquals("Thirdline$$%", line);
                     break;
                 }
@@ -173,17 +246,17 @@ public class GeoCPMUtilsTest {
         }
         r.close();
 
-        assertEquals("illegal linecount", 3, lineCount);
+        assertEquals("illegal linecount", 7, lineCount);
 
         String content = GeoCPMUtils.readContent(f);
 
-        assertEquals("content not equal", input.content, content);
+        assertEquals("content not equal", "ABCDEFG\nHIJKLM  \n\n\n" + input.rainevent, content);
 
         FileUtils.deleteDir(f.getParentFile());
 
-        input.content = "TestString\nsecondline\nThirdline$$%\n\n\n";
+        input.rainevent = "TestString\nsecondline\nThirdline$$%\n\n\n";
 
-        f = GeoCPMUtils.writeInput(input);
+        f = GeoCPMUtils.writeInput(input, config);
 
         r = new BufferedReader(new FileReader(f));
         lineCount = 0;
@@ -191,14 +264,30 @@ public class GeoCPMUtilsTest {
             ++lineCount;
             switch (lineCount) {
                 case 1: {
-                    assertEquals("TestString", line);
+                    assertEquals("ABCDEFG", line);
                     break;
                 }
                 case 2: {
-                    assertEquals("secondline", line);
+                    assertEquals("HIJKLM  ", line);
                     break;
                 }
                 case 3: {
+                    assertEquals("", line);
+                    break;
+                }
+                case 4: {
+                    assertEquals("", line);
+                    break;
+                }
+                case 5: {
+                    assertEquals("TestString", line);
+                    break;
+                }
+                case 6: {
+                    assertEquals("secondline", line);
+                    break;
+                }
+                case 7: {
                     assertEquals("Thirdline$$%", line);
                     break;
                 }
@@ -206,11 +295,11 @@ public class GeoCPMUtilsTest {
         }
         r.close();
 
-        assertEquals("illegal linecount", 5, lineCount);
+        assertEquals("illegal linecount", 9, lineCount);
 
         content = GeoCPMUtils.readContent(f);
 
-        assertEquals("content not equal", input.content, content);
+        assertEquals("content not equal", "ABCDEFG\nHIJKLM  \n\n\n" + input.rainevent, content);
 
         FileUtils.deleteDir(f.getParentFile());
     }
@@ -380,7 +469,7 @@ public class GeoCPMUtilsTest {
             bos.write(buff, 0, read);
             read = bis.read(buff);
         }
-        
+
         bis.close();
         bos.close();
     }

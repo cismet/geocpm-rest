@@ -65,7 +65,8 @@ public final class GeoCPMRestClient implements GeoCPMService {
             final ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class, runId);
 
             if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status: " + response.getStatus()); // NOI18N
+                LOG.info("GeoCPM Wrapper Service response status for deleteRun('" + runId + "'): " // NOI18N
+                            + response.getStatus());
             }
 
             final int status = response.getStatus() - 200;
@@ -95,7 +96,8 @@ public final class GeoCPMRestClient implements GeoCPMService {
             final ClientResponse response = builder.get(ClientResponse.class);
 
             if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status: " + response.getStatus()); // NOI18N
+                LOG.info("GeoCPM Wrapper Service response status for getResults('" + runId + "'): " // NOI18N
+                            + response.getStatus());
             }
 
             final int status = response.getStatus() - 200;
@@ -127,7 +129,8 @@ public final class GeoCPMRestClient implements GeoCPMService {
             final ClientResponse response = builder.get(ClientResponse.class);
 
             if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status: " + response.getStatus()); // NOI18N
+                LOG.info("GeoCPM Wrapper Service response status for getStatus('" + runId + "'): " // NOI18N
+                            + response.getStatus());
             }
 
             final int status = response.getStatus() - 200;
@@ -159,7 +162,8 @@ public final class GeoCPMRestClient implements GeoCPMService {
             final ClientResponse response = builder.put(ClientResponse.class, input);
 
             if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status: " + response.getStatus()); // NOI18N
+                LOG.info("GeoCPM Wrapper Service response status for runGeoCPM('" + input + "'): " // NOI18N
+                            + response.getStatus()); // NOI18N
             }
 
             final int status = response.getStatus() - 200;

@@ -20,7 +20,8 @@ public final class GeoCPMInput {
 
     //~ Instance fields --------------------------------------------------------
 
-    public String content;
+    public String configName;
+    public String rainevent;
 
     //~ Constructors -----------------------------------------------------------
 
