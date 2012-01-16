@@ -9,8 +9,10 @@ package de.cismet.cids.custom.sudplan.geocpmrest.io;
 
 import org.apache.log4j.Logger;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -19,6 +21,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+
+import java.util.zip.GZIPOutputStream;
 
 /**
  * DOCUMENT ME!
@@ -40,8 +46,6 @@ public final class GeoCPMUtils {
     public static final String RES_ELEMENT_EXT = ".aus";                // NOI18N
     public static final String GEOCPM_EXE = "GeoCPM.exe";               // NOI18N
     public static final String PID_FILE = "GeoCPM.pid";                 // NOI18N
-    public static final String EXEC_STATUS_FINISHED = "Finished";       // NOI18N
-    public static final String EXEC_STATUS_BROKEN = "Broken";           // NOI18N
     public static final String TOKEN_RAINCURVE = "RAINCURVE";           // NOI18N
 
     //~ Constructors -----------------------------------------------------------
@@ -202,6 +206,81 @@ public final class GeoCPMUtils {
         }
 
         return output;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   workingDir  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IOException            DOCUMENT ME!
+     * @throws  IllegalStateException  DOCUMENT ME!
+     */
+    public static String readInfo(final File workingDir) throws IOException {
+        final File[] infoFileArray = workingDir.listFiles(new FileFilter() {
+
+                    @Override
+                    public boolean accept(final File pathname) {
+                        return pathname.getPath().endsWith(INFO_FILE_NAME);
+                    }
+                });
+
+        if (infoFileArray.length == 1) {
+            return readContentGzip(infoFileArray[0]);
+        } else {
+            throw new IllegalStateException("there is not exactly one info file: " + workingDir); // NOI18N
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   toRead  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IOException               DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     */
+    public static String readContentGzip(final File toRead) throws IOException {
+        if (toRead == null) {
+            throw new IllegalArgumentException("file to read must not be null"); // NOI18N
+        }
+
+        final PipedOutputStream pos = new PipedOutputStream();
+        final PipedInputStream pis = new PipedInputStream(pos);
+
+        final PipingFileReader pr = new PipingFileReader(toRead, pos);
+        final PipedGZipStringWriter pw = new PipedGZipStringWriter(pis, "Windows-1256"); // NOI18N
+
+        final Thread reader = new Thread(pr, "geocpm info pipe reader"); // NOI18N
+        final Thread writer = new Thread(pw, "geocpm info pipe writer"); // NOI18N
+
+        reader.start();
+        writer.start();
+        try {
+            reader.join();
+            writer.join();
+        } catch (final InterruptedException ex) {
+            final String message = "cannot wait threads to finish work"; // NOI18N
+            LOG.error(message, ex);
+            throw new IOException(message, ex);
+        }
+
+        if (pr.getException() != null) {
+            final String message = "error while reading from file";      // NOI18N
+            LOG.error(message, pr.getException());
+            throw new IOException(message, pr.getException());
+        }
+        if (pw.getException() != null) {
+            final String message = "error while writing to gzip string"; // NOI18N
+            LOG.error(message, pw.getException());
+            throw new IOException(message, pw.getException());
+        }
+
+        return pw.getResult();
     }
 
     /**
@@ -461,7 +540,7 @@ public final class GeoCPMUtils {
      *                                 basis for this implementation or if any other error occurs during status
      *                                 determination.
      */
-    public static Status getExecutionStatus(final File workingDir, final int pid) {
+    public static ExecutionStatus getExecutionStatus(final File workingDir, final int pid) {
         final String command = "tasklist /fi \"PID eq " + pid + "\" /v"; // NOI18N
 
         try {
@@ -470,7 +549,7 @@ public final class GeoCPMUtils {
 
             int linecount = 1;
             String line = br.readLine();
-            final Status status = new Status();
+            final ExecutionStatus status = new ExecutionStatus();
             while (line != null) {
                 // first line is empty, second are the column headers, third are separators
                 if (linecount < 4) {
@@ -481,8 +560,8 @@ public final class GeoCPMUtils {
                     if (line.startsWith(GEOCPM_EXE)) {
                         final String[] split = line.split("\\s+");                           // NOI18N
                         // seventh entry is the current status
-                        status.statusDescription = split[6];
-                        status.status = Status.STATUS_RUNNING;
+                        status.setStatusDesc(split[6]);
+                        status.setStatus(ExecutionStatus.RUNNING);
                     }
                 }
                 line = br.readLine();
@@ -490,17 +569,17 @@ public final class GeoCPMUtils {
             }
 
             // we did not find the running process, we check for the info file which is present when the run is finished
-            if (status.statusDescription == null) {
+            if (status.getStatusDesc() == null) {
                 final File[] infoFile = workingDir.listFiles(new RunFinishedFilter());
 
                 assert infoFile.length < 2 : "the run finished filter does not accept more than one file"; // NOI18N
 
                 if (infoFile.length == 0) {
-                    status.statusDescription = EXEC_STATUS_BROKEN;
-                    status.status = Status.STATUS_BROKEN;
+                    status.setStatusDesc("the run is not running anymore and no results were found, considered broken"); // NOI18N
+                    status.setStatus(ExecutionStatus.BROKEN);
                 } else {
-                    status.statusDescription = EXEC_STATUS_FINISHED;
-                    status.status = Status.STATUS_FINISHED;
+                    status.setStatusDesc("the run is finished");                                                         // NOI18N
+                    status.setStatus(ExecutionStatus.FINISHED);
                 }
             }
 
@@ -513,6 +592,179 @@ public final class GeoCPMUtils {
     }
 
     //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class PipingFileReader implements Runnable {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final transient File toRead;
+        private final transient PipedOutputStream pos;
+        private transient Exception e;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new PipingFileReader object.
+         *
+         * @param   toRead  DOCUMENT ME!
+         * @param   pos     DOCUMENT ME!
+         *
+         * @throws  IllegalArgumentException  DOCUMENT ME!
+         */
+        PipingFileReader(final File toRead, final PipedOutputStream pos) {
+            if (toRead == null) {
+                throw new IllegalArgumentException("toRead must not be null");
+            }
+            if (pos == null) {
+                throw new IllegalArgumentException("pos must not be null");
+            }
+
+            this.toRead = toRead;
+            this.pos = pos;
+            this.e = null;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public void run() {
+            BufferedInputStream bis = null;
+            try {
+                bis = new BufferedInputStream(new FileInputStream(toRead));
+                final byte[] buffer = new byte[8192];
+                int read;
+                while ((read = bis.read(buffer)) != -1) {
+                    pos.write(buffer, 0, read);
+                }
+            } catch (final Exception ex) {
+                LOG.error("cannot read geocpm info", ex);
+                this.e = ex;
+            } finally {
+                if (bis != null) {
+                    try {
+                        bis.close();
+                    } catch (final IOException ex) {
+                        LOG.warn("cannot close geocpm info inputstream", ex); // NOI18N
+                    }
+                }
+
+                try {
+                    pos.close();
+                } catch (final IOException ex) {
+                    LOG.warn("could not close pipe", ex); // NOI18N
+                }
+            }
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Exception getException() {
+            return e;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class PipedGZipStringWriter implements Runnable {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final transient PipedInputStream pis;
+        private final transient String encoding;
+        private transient String result;
+        private transient Exception e;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new PipedGZipStringWriter object.
+         *
+         * @param   pis       DOCUMENT ME!
+         * @param   encoding  DOCUMENT ME!
+         *
+         * @throws  IllegalArgumentException  DOCUMENT ME!
+         */
+        PipedGZipStringWriter(final PipedInputStream pis, final String encoding) {
+            if (encoding == null) {
+                throw new IllegalArgumentException("encoding must not be null");
+            }
+            if (pis == null) {
+                throw new IllegalArgumentException("pis must not be null");
+            }
+
+            this.encoding = encoding;
+            this.pis = pis;
+            this.e = null;
+            this.result = null;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public void run() {
+            GZIPOutputStream gos = null;
+            try {
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                gos = new GZIPOutputStream(baos);
+                final byte[] buffer = new byte[8192];
+                int read;
+                while ((read = pis.read(buffer)) != -1) {
+                    gos.write(buffer, 0, read);
+                }
+
+                gos.flush();
+                gos.finish();
+
+                result = baos.toString(encoding);
+            } catch (final Exception ex) {
+                LOG.error("cannot read geocpm info", ex);                     // NOI18N
+                this.e = ex;
+            } finally {
+                if (gos != null) {
+                    try {
+                        gos.close();
+                    } catch (final IOException ex) {
+                        LOG.warn("cannot close piped gzip outputstream", ex); // NOI18N
+                    }
+                }
+
+                try {
+                    pis.close();
+                } catch (final IOException ex) {
+                    LOG.warn("could not close pipe", ex); // NOI18N
+                }
+            }
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Exception getException() {
+            return e;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getResult() {
+            return result;
+        }
+    }
 
     /**
      * Filter for GeoCPM <code>ResultsElement*.aus</code> files.

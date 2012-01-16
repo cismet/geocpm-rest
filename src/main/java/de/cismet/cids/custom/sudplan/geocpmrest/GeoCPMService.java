@@ -7,11 +7,12 @@
 ****************************************************/
 package de.cismet.cids.custom.sudplan.geocpmrest;
 
-import javax.ws.rs.QueryParam;
-
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMInput;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMOutput;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.Status;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ExecutionStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMException;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationResult;
 
 /**
  * DOCUMENT ME!
@@ -26,9 +27,26 @@ public interface GeoCPMService {
     /**
      * DOCUMENT ME!
      *
-     * @param  runId  DOCUMENT ME!
+     * @param   cfg  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
      */
-    void deleteRun(@QueryParam(value = GeoCPMRestServiceImpl.PARAM_RUN_ID) final String runId);
+    ImportStatus importConfiguration(final ImportConfig cfg) throws GeoCPMException, IllegalArgumentException;
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   cfg  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     */
+    ExecutionStatus startSimulation(final SimulationConfig cfg) throws GeoCPMException, IllegalArgumentException;
 
     /**
      * DOCUMENT ME!
@@ -36,8 +54,11 @@ public interface GeoCPMService {
      * @param   runId  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
      */
-    GeoCPMOutput getResults(@QueryParam(value = GeoCPMRestServiceImpl.PARAM_RUN_ID) final String runId);
+    ExecutionStatus getStatus(final String runId) throws GeoCPMException, IllegalArgumentException;
 
     /**
      * DOCUMENT ME!
@@ -45,15 +66,23 @@ public interface GeoCPMService {
      * @param   runId  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     * @throws  IllegalStateException     DOCUMENT ME!
      */
-    Status getStatus(@QueryParam(value = GeoCPMRestServiceImpl.PARAM_RUN_ID) final String runId);
+    SimulationResult getResults(final String runId) throws GeoCPMException,
+        IllegalArgumentException,
+        IllegalStateException;
 
     /**
      * DOCUMENT ME!
      *
-     * @param   input  DOCUMENT ME!
+     * @param   runId  DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     * @throws  IllegalStateException     DOCUMENT ME!
      */
-    String runGeoCPM(final GeoCPMInput input);
+    void cleanup(final String runId) throws GeoCPMException, IllegalArgumentException, IllegalStateException;
 }

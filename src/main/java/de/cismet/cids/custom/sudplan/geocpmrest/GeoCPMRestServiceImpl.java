@@ -9,8 +9,13 @@ package de.cismet.cids.custom.sudplan.geocpmrest;
 
 import org.apache.log4j.Logger;
 
+import org.openide.util.io.ReaderInputStream;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+
+import java.util.zip.GZIPInputStream;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -19,14 +24,17 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMInput;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMOutput;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ExecutionStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMException;
 import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMUtils;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.Status;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationResult;
+import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMExport;
+import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMImport;
 
 import de.cismet.tools.FileUtils;
 
@@ -44,39 +52,87 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
     private static final transient Logger LOG = Logger.getLogger(GeoCPMRestServiceImpl.class);
 
     public static final String PARAM_RUN_ID = "runId"; // NOI18N
-    public static final String PARAM_INPUT = "input";  // NOI18N
 
-    public static final String PATH_RUN_GEOCPM = "/runGeoCPM";   // NOI18N
-    public static final String PATH_GET_RESULTS = "/getResults"; // NOI18N
-    public static final String PATH_GET_STATUS = "/getStatus";   // NOI18N
-    public static final String PATH_DEL_RUN = "/deleteRun";      // NOI18N
+    public static final String PATH_IMPORT_CFG = "/importConfiguration"; // NOI18N
+    public static final String PATH_START_SIM = "/startSimulation";      // NOI18N
+    public static final String PATH_GET_RESULTS = "/getResults";         // NOI18N
+    public static final String PATH_GET_STATUS = "/getStatus";           // NOI18N
+    public static final String PATH_CLEANUP = "/cleanup";                // NOI18N
 
     private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\GeoCPM.exe";                            // NOI18N
     private static final String LAUNCHER_EXE = "c:\\users\\wupp-model\\desktop\\launcher\\launcher.exe"; // NOI18N
 
-    private static final String GEOCPM_CONFIG_FOLDER = "c:\\users\\wupp-model\\desktop\\geocpm_configs"; // NOI18N
+    private static final String DB_PASSWORD = "cismetz12";                                // NOI18N
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/sudplan_wupp"; // NOI18N
+    private static final String DB_USERNAME = "postgres";                                 // NOI18N
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   input  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  WebApplicationException  DOCUMENT ME!
-     */
     @PUT
-    @Path(PATH_RUN_GEOCPM)
+    @Path(PATH_IMPORT_CFG)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public String runGeoCPM(final GeoCPMInput input) {
+    public ImportStatus importConfiguration(final ImportConfig cfg) throws GeoCPMException, IllegalArgumentException {
+        if (cfg == null) {
+            throw new IllegalArgumentException("cfg must not be null");             // NOI18N
+        } else if (cfg.getGeocpmData() == null) {
+            throw new IllegalArgumentException("geocpm cfg data must not be null"); // NOI18N
+        }
+
         try {
-            final File configFolder = new File(GEOCPM_CONFIG_FOLDER);
-            final File config = new File(configFolder, input.configName);
-            final File outFile = GeoCPMUtils.writeInput(input, config);
+            // FIXME: add support for plain text data as specified in D6.2.2
+            // FIXME: add dyna support
+            final GZIPInputStream is = new GZIPInputStream(new ReaderInputStream(
+                        new StringReader(cfg.getGeocpmData())));
+            final GeoCPMImport geoCPMImport = new GeoCPMImport(
+                    is,
+                    DB_USERNAME,
+                    DB_PASSWORD,
+                    DB_URL);
+            final int cfgId = geoCPMImport.doImport();
+
+            return new ImportStatus(cfgId);
+        } catch (final Exception e) {
+            final String message = "cannot import configuration(s): " + cfg; // NOI18N
+            LOG.error(message, e);
+
+            throw new GeoCPMException(message, e);
+        }
+    }
+
+    @POST
+    @Path(PATH_START_SIM)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public ExecutionStatus startSimulation(final SimulationConfig cfg) throws GeoCPMException,
+        IllegalArgumentException {
+        if (cfg == null) {
+            throw new IllegalArgumentException("cfg must not be null");       // NOI18N
+        } else if (cfg.getRainevent() == null) {
+            throw new IllegalArgumentException("rainevent must not be null"); // NOI18N
+        }
+
+        final File outFile;
+        try {
+            // FIXME: use dyna
+            final File tmpDir = new File(System.getProperty("java.io.tmpdir"));           // NOI18N
+            final File outDir = new File(tmpDir, "geocpm_" + System.currentTimeMillis()); // NOI18N
+            if (!outDir.mkdir()) {
+                throw new IOException("cannot create tmp dir");                           // NOI18N
+            }
+            outFile = new File(outDir, "GeoCPM.ein");                                     // NOI18N
+            final GeoCPMExport export = new GeoCPMExport(cfg.getGeocpmCfg(), outFile, DB_USERNAME, DB_PASSWORD, DB_URL);
+            export.doExport();
+        } catch (final Exception e) {
+            final String message = "error reading simulation configuration: " + cfg;      // NOI18N
+            LOG.error(message, e);
+
+            throw new GeoCPMException(message, e);
+        }
+
+        try {
             final String command = LAUNCHER_EXE
                         + " -w "       // NOI18N
                         + outFile.getParentFile().getAbsolutePath()
@@ -105,34 +161,28 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
                 throw new IOException("process was not finished gracefully: " + exitCode); // NOI18N
             }
 
-            return GeoCPMUtils.createId(outFile, GeoCPMUtils.readPid(outFile.getParentFile()));
-        } catch (final Exception e) {
-            if (e instanceof WebApplicationException) {
-                throw (WebApplicationException)e;
-            }
+            final String taskId = GeoCPMUtils.createId(outFile, GeoCPMUtils.readPid(outFile.getParentFile()));
 
-            final String message = "cannot run GeoCPM model: " + input;                                          // NOI18N
+            return new ExecutionStatus(ExecutionStatus.STARTED, taskId);
+        } catch (final Exception e) {
+            final String message = "error starting simulation: " + cfg; // NOI18N
             LOG.error(message, e);
-            throw new WebApplicationException(Response.status(500).entity(message + " | Exc: " + e.getMessage()) // NOI18N
-                .build());
+
+            return new ExecutionStatus(ExecutionStatus.FAILED, null);
         }
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   runId  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  WebApplicationException  DOCUMENT ME!
-     */
     @GET
     @Path(PATH_GET_STATUS)
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Status getStatus(@QueryParam(PARAM_RUN_ID) final String runId) {
+    public ExecutionStatus getStatus(@QueryParam(PARAM_RUN_ID) final String runId) throws GeoCPMException,
+        IllegalArgumentException {
+        if ((runId == null) || runId.isEmpty()) {
+            throw new IllegalArgumentException("runId must not be null or empty"); // NOI18N
+        }
+
         try {
             final int runPid;
             final int wdPid;
@@ -145,105 +195,79 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
             } catch (final Exception e) {
                 final String message = "illegal id: " + runId; // NOI18N
                 LOG.error(message, e);
-                throw new WebApplicationException(Response.status(409).entity(message).build());
+                throw new IllegalArgumentException(message, e);
             }
 
             if (runPid != wdPid) {
                 final String message = "working dir pid and runid pid mismatch: " + runId; // NOI18N
                 LOG.error(message);
-                throw new WebApplicationException(Response.status(409).entity(message).build());
+                throw new GeoCPMException(message);
             }
 
-            return GeoCPMUtils.getExecutionStatus(workingDir, wdPid);
+            final ExecutionStatus status = GeoCPMUtils.getExecutionStatus(workingDir, wdPid);
+            status.setTaskId(runId);
+
+            return status;
         } catch (final Exception e) {
-            if (e instanceof WebApplicationException) {
-                throw (WebApplicationException)e;
-            }
-
-            final String message = "cannot fetch status for runid: " + runId;                                    // NOI18N
+            final String message = "cannot fetch status for runid: " + runId; // NOI18N
             LOG.error(message, e);
-            throw new WebApplicationException(Response.status(500).entity(message + " | Exc: " + e.getMessage()) // NOI18N
-                .build());
+            throw new GeoCPMException(message, e);
         }
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   runId  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  WebApplicationException  DOCUMENT ME!
-     */
     @GET
     @Path(PATH_GET_RESULTS)
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public GeoCPMOutput getResults(@QueryParam(PARAM_RUN_ID) final String runId) {
-        try {
-            final int runPid;
-            final int wdPid;
-            final File workingDir;
+    public SimulationResult getResults(@QueryParam(PARAM_RUN_ID) final String runId) throws GeoCPMException,
+        IllegalArgumentException,
+        IllegalStateException {
+        if ((runId == null) || runId.isEmpty()) {
+            throw new IllegalArgumentException("runId must not be null or empty"); // NOI18N
+        }
 
+        final ExecutionStatus status = getStatus(runId);
+        if (ExecutionStatus.FINISHED.equals(status.getStatus())) {
             try {
-                workingDir = GeoCPMUtils.getWorkingDir(runId);
-                runPid = GeoCPMUtils.getPid(runId);
-                wdPid = GeoCPMUtils.readPid(workingDir);
+                final File workingDir = GeoCPMUtils.getWorkingDir(runId);
+
+                final SimulationResult result = new SimulationResult();
+                result.setTaskId(runId);
+                result.setGeocpmInfo(GeoCPMUtils.readInfo(workingDir));
+
+                // FIXME: WMS layers to be added
+
+                return result;
             } catch (final Exception e) {
-                final String message = "illegal id: " + runId; // NOI18N
+                final String message = "cannot get results: " + runId; // NOI18N
                 LOG.error(message, e);
-                throw new WebApplicationException(Response.status(409).entity(message).build());
+                throw new GeoCPMException(message, e);
             }
-
-            if (runPid != wdPid) {
-                final String message = "working dir pid and runid pid mismatch: " + runId; // NOI18N
-                LOG.error(message);
-                throw new WebApplicationException(Response.status(409).entity(message).build());
-            }
-
-            final Status status = GeoCPMUtils.getExecutionStatus(workingDir, runPid);
-
-            if (status.status != Status.STATUS_FINISHED) {
-                LOG.warn("requested results for unfinisehd run: " + runId);                                           // NOI18N
-                throw new WebApplicationException(Response.status(409).entity("not finished yet: " + runId).build()); // NOI18N
-            }
-
-            return GeoCPMUtils.readOutput(workingDir);
-        } catch (final Exception e) {
-            if (e instanceof WebApplicationException) {
-                throw (WebApplicationException)e;
-            }
-
-            final String message = "cannot fetch results for runid: " + runId;                                   // NOI18N
-            LOG.error(message, e);
-            throw new WebApplicationException(Response.status(500).entity(message + " | Exc: " + e.getMessage()) // NOI18N
-                .build());
+        } else {
+            throw new IllegalStateException("cannot get results if not in finished state:" + runId); // NOI18N
         }
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   runId  DOCUMENT ME!
-     *
-     * @throws  WebApplicationException  DOCUMENT ME!
-     */
     // we have to use POST instead of DELETE, see
     // http://jersey.576304.n2.nabble.com/Error-HTTP-method-DELETE-doesn-t-support-output-td4513829.html
     @POST
-    @Path(PATH_DEL_RUN)
+    @Path(PATH_CLEANUP)
     @Consumes(MediaType.TEXT_PLAIN)
     @Override
-    public void deleteRun(final String runId) {
-        try {
-            final File workingDir = GeoCPMUtils.getWorkingDir(runId);
-            FileUtils.deleteDir(workingDir);
-        } catch (final Exception ex) {
-            final String message = "cannot delete run directory for runid: " + runId; // NOI18N
-            LOG.warn(message, ex);
-            throw new WebApplicationException(Response.status(409).entity(message).build());
+    public void cleanup(final String runId) throws GeoCPMException, IllegalArgumentException, IllegalStateException {
+        final ExecutionStatus status = getStatus(runId);
+        if (ExecutionStatus.FINISHED.equals(status.getStatus())) {
+            try {
+                final File workingDir = GeoCPMUtils.getWorkingDir(runId);
+                FileUtils.deleteDir(workingDir);
+            } catch (final Exception ex) {
+                final String message = "cannot delete run directory for runid: " + runId; // NOI18N
+                LOG.warn(message, ex);
+                throw new GeoCPMException(message, ex);
+            }
+        } else {
+            throw new IllegalStateException("simulation with id '" + runId + "' is not in finished state"); // NOI18N
         }
     }
 }
