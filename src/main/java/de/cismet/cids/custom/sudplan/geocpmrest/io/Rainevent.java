@@ -9,7 +9,7 @@ package de.cismet.cids.custom.sudplan.geocpmrest.io;
 
 import java.io.Serializable;
 
-import java.util.Map;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -24,7 +24,8 @@ public final class Rainevent implements Serializable {
 
     //~ Instance fields --------------------------------------------------------
 
-    private Map<Integer, Double> secondsToMm;
+    private int interval;
+    private List<Double> precipitations;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -37,10 +38,12 @@ public final class Rainevent implements Serializable {
     /**
      * Creates a new Rainevent object.
      *
-     * @param  secondsToMm  DOCUMENT ME!
+     * @param  interval        secondsToMm DOCUMENT ME!
+     * @param  precipitations  DOCUMENT ME!
      */
-    public Rainevent(final Map<Integer, Double> secondsToMm) {
-        this.secondsToMm = secondsToMm;
+    public Rainevent(final int interval, final List<Double> precipitations) {
+        this.interval = interval;
+        this.precipitations = precipitations;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -48,18 +51,36 @@ public final class Rainevent implements Serializable {
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @param  interval  DOCUMENT ME!
      */
-    public Map<Integer, Double> getSecondsToMm() {
-        return secondsToMm;
+    public void setInterval(final int interval) {
+        this.interval = interval;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  secondsToMm  DOCUMENT ME!
+     * @return  DOCUMENT ME!
      */
-    public void setSecondsToMm(final Map<Integer, Double> secondsToMm) {
-        this.secondsToMm = secondsToMm;
+    public int getInterval() {
+        return this.interval;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  precipitations  DOCUMENT ME!
+     */
+    public void setPrecipitations(final List<Double> precipitations) {
+        this.precipitations = precipitations;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<Double> getPrecipitations() {
+        return this.precipitations;
     }
 }
