@@ -1688,3 +1688,55 @@ Caused by: java.io.IOException: error=2, No such file or directory
 	at java.lang.ProcessImpl.start(ProcessImpl.java:91)
 	at java.lang.ProcessBuilder.start(ProcessBuilder.java:453)
 	... 41 more
+2012-01-30 16:49:08,342 main INFO de.cismet.commons.simplerestserver.AbstractWSContainer.initUri(AbstractWSContainer.java:62) :: created baseuri: http://localhost:9988/
+2012-01-30 16:49:08,493 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:65) :: grizzly coming up @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 16:49:08,538 main DEBUG de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:303) :: Using Algorithm: com.sun.grizzly.standalone.StaticStreamAlgorithm
+2012-01-30 16:49:08,611 SelectorThread-9988 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Starting Grizzly Framework 1.9.18-m - Mon Jan 30 16:49:08 CET 2012
+2012-01-30 17:11:18,309 Thread-3 DEBUG de.cismet.commons.simplerestserver.WebServerMain$RestServerShutdownHook.run(WebServerMain.java:389) :: shutting down all containers
+2012-01-30 17:11:18,310 Thread-3 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.down(GrizzlyRESTContainer.java:84) :: grizzly coming down @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 17:11:58,398 main INFO de.cismet.commons.simplerestserver.AbstractWSContainer.initUri(AbstractWSContainer.java:62) :: created baseuri: http://localhost:9986/
+2012-01-30 17:11:58,424 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:65) :: grizzly coming up @ http://localhost:9986/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 17:11:58,476 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Using Algorithm: com.sun.grizzly.standalone.StaticStreamAlgorithm
+2012-01-30 17:11:58,559 SelectorThread-9986 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Starting Grizzly Framework 1.9.18-m - Mon Jan 30 17:11:58 CET 2012
+2012-01-30 17:11:58,592 Thread-4 ERROR de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:309) :: Exception during starting the controller
+java.net.BindException: Address already in use: 9986=com.sun.grizzly.http.SelectorThreadHandler@72940b84
+	at com.sun.grizzly.TCPSelectorHandler.initSelector(TCPSelectorHandler.java:432)
+	at com.sun.grizzly.TCPSelectorHandler.preSelect(TCPSelectorHandler.java:379)
+	at com.sun.grizzly.SelectorHandlerRunner.doSelect(SelectorHandlerRunner.java:183)
+	at com.sun.grizzly.SelectorHandlerRunner.run(SelectorHandlerRunner.java:130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
+	at java.lang.Thread.run(Thread.java:680)
+2012-01-30 17:11:58,634 main ERROR de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:71) :: could not start grizzly webcontainer
+java.net.BindException: Address already in use: 9986=com.sun.grizzly.http.SelectorThreadHandler@72940b84
+	at com.sun.grizzly.TCPSelectorHandler.initSelector(TCPSelectorHandler.java:432)
+	at com.sun.grizzly.TCPSelectorHandler.preSelect(TCPSelectorHandler.java:379)
+	at com.sun.grizzly.SelectorHandlerRunner.doSelect(SelectorHandlerRunner.java:183)
+	at com.sun.grizzly.SelectorHandlerRunner.run(SelectorHandlerRunner.java:130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
+	at java.lang.Thread.run(Thread.java:680)
+2012-01-30 17:12:19,814 main INFO de.cismet.commons.simplerestserver.AbstractWSContainer.initUri(AbstractWSContainer.java:62) :: created baseuri: http://localhost:9988/
+2012-01-30 17:12:19,838 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:65) :: grizzly coming up @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 17:12:19,889 main DEBUG de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:303) :: Using Algorithm: com.sun.grizzly.standalone.StaticStreamAlgorithm
+2012-01-30 17:12:19,970 SelectorThread-9988 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Starting Grizzly Framework 1.9.18-m - Mon Jan 30 17:12:19 CET 2012
+2012-01-30 17:45:37,184 Thread-3 DEBUG de.cismet.commons.simplerestserver.WebServerMain$RestServerShutdownHook.run(WebServerMain.java:389) :: shutting down all containers
+2012-01-30 17:45:37,185 Thread-3 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.down(GrizzlyRESTContainer.java:84) :: grizzly coming down @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 17:46:57,474 main INFO de.cismet.commons.simplerestserver.AbstractWSContainer.initUri(AbstractWSContainer.java:62) :: created baseuri: http://localhost:9988/
+2012-01-30 17:46:57,498 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:65) :: grizzly coming up @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 17:46:57,548 main DEBUG de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:303) :: Using Algorithm: com.sun.grizzly.standalone.StaticStreamAlgorithm
+2012-01-30 17:46:57,632 SelectorThread-9988 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Starting Grizzly Framework 1.9.18-m - Mon Jan 30 17:46:57 CET 2012
+2012-01-30 18:30:57,975 Thread-3 DEBUG de.cismet.commons.simplerestserver.WebServerMain$RestServerShutdownHook.run(WebServerMain.java:389) :: shutting down all containers
+2012-01-30 18:30:57,976 Thread-3 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.down(GrizzlyRESTContainer.java:84) :: grizzly coming down @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 18:31:45,206 main INFO de.cismet.commons.simplerestserver.AbstractWSContainer.initUri(AbstractWSContainer.java:62) :: created baseuri: http://localhost:9988/
+2012-01-30 18:31:45,227 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:65) :: grizzly coming up @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 18:31:45,272 main DEBUG de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:303) :: Using Algorithm: com.sun.grizzly.standalone.StaticStreamAlgorithm
+2012-01-30 18:31:45,346 SelectorThread-9988 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Starting Grizzly Framework 1.9.18-m - Mon Jan 30 18:31:45 CET 2012
+2012-01-30 18:32:00,941 Thread-3 DEBUG de.cismet.commons.simplerestserver.WebServerMain$RestServerShutdownHook.run(WebServerMain.java:389) :: shutting down all containers
+2012-01-30 18:32:00,942 Thread-3 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.down(GrizzlyRESTContainer.java:84) :: grizzly coming down @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 18:32:20,486 main INFO de.cismet.commons.simplerestserver.AbstractWSContainer.initUri(AbstractWSContainer.java:62) :: created baseuri: http://localhost:9988/
+2012-01-30 18:32:20,509 main INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.up(GrizzlyRESTContainer.java:65) :: grizzly coming up @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}
+2012-01-30 18:32:20,561 main DEBUG de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:303) :: Using Algorithm: com.sun.grizzly.standalone.StaticStreamAlgorithm
+2012-01-30 18:32:20,646 SelectorThread-9988 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer$Java2Log4jLogger.log(GrizzlyRESTContainer.java:305) :: Starting Grizzly Framework 1.9.18-m - Mon Jan 30 18:32:20 CET 2012
+2012-01-30 18:52:36,908 Thread-3 DEBUG de.cismet.commons.simplerestserver.WebServerMain$RestServerShutdownHook.run(WebServerMain.java:389) :: shutting down all containers
+2012-01-30 18:52:36,918 Thread-3 INFO de.cismet.commons.simplerestserver.container.GrizzlyRESTContainer.down(GrizzlyRESTContainer.java:84) :: grizzly coming down @ http://localhost:9988/ :: server params: {com.sun.jersey.config.property.packages=de.cismet.cids.custom.sudplan.geocpmrest}

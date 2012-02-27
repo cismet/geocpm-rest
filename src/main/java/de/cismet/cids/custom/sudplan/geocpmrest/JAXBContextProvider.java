@@ -18,13 +18,11 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMInfo;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMInput;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMMax;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMOutput;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMSubInfo;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.ResultsElement;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.Status;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ExecutionStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationResult;
 
 /**
  * DOCUMENT ME!
@@ -50,13 +48,11 @@ public final class JAXBContextProvider implements ContextResolver<JAXBContext> {
     public JAXBContextProvider() throws JAXBException {
         types = new HashSet<Class>();
 
-        types.add(GeoCPMInfo.class);
-        types.add(GeoCPMInput.class);
-        types.add(GeoCPMMax.class);
-        types.add(GeoCPMOutput.class);
-        types.add(GeoCPMSubInfo.class);
-        types.add(ResultsElement.class);
-        types.add(Status.class);
+        types.add(ImportConfig.class);
+        types.add(ImportStatus.class);
+        types.add(SimulationConfig.class);
+        types.add(SimulationResult.class);
+        types.add(ExecutionStatus.class);
 
         context = new JSONJAXBContext(JSONConfiguration.natural().build(), types.toArray(new Class[types.size()]));
     }

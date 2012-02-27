@@ -62,9 +62,10 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
     private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\GeoCPM.exe";                            // NOI18N
     private static final String LAUNCHER_EXE = "c:\\users\\wupp-model\\desktop\\launcher\\launcher.exe"; // NOI18N
 
-    private static final String DB_PASSWORD = "cismetz12";                                // NOI18N
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/sudplan_wupp"; // NOI18N
-    private static final String DB_USERNAME = "postgres";                                 // NOI18N
+    private static final String DB_PASSWORD = "cismetz12"; // NOI18N
+//    private static final String DB_URL = "jdbc:postgresql://localhost:5432/sudplan_wupp"; // NOI18N
+    private static final String DB_URL = "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp"; // NOI18N
+    private static final String DB_USERNAME = "postgres";                                      // NOI18N
 
     //~ Methods ----------------------------------------------------------------
 

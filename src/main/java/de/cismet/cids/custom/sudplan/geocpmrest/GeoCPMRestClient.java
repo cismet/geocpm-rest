@@ -72,7 +72,6 @@ public final class GeoCPMRestClient implements GeoCPMService {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public ImportStatus importConfiguration(final ImportConfig cfg) throws GeoCPMException, IllegalArgumentException {
         if (cfg == null) {
             throw new IllegalArgumentException("cfg must not be null"); // NOI18N
@@ -102,38 +101,10 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
                 final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
 
-                switch (response.getStatus()) {
-                    case 550: {
-                        final GeoCPMException e = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                GeoCPMException.class);
-                        if (e != null) {
-                            throw e;
-                        }
-                        // fall-through
-                    }
-                    case 450: {
-                        final IllegalArgumentException e1 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalArgumentException.class);
-                        if (e1 != null) {
-                            throw e1;
-                        }
-                        // fall-through
-                    }
-                    case 451: {
-                        final IllegalStateException e2 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalStateException.class);
-                        if (e2 != null) {
-                            throw e2;
-                        }
-                        // fall-through
-                    }
-                    default: {
-                        throw new GeoCPMClientException("cannot remap exception", ex);
-                    }
-                }
+                GeoCPMServiceExceptionMapper.throwException(response, ex);
+
+                assert false : "unreachable code";                        // NOI18N
+                return null;
             } else {
                 final String message = "cannot start simulation: " + cfg; // NOI18N
                 LOG.error(message, ex);
@@ -143,7 +114,6 @@ public final class GeoCPMRestClient implements GeoCPMService {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public ExecutionStatus startSimulation(final SimulationConfig cfg) throws GeoCPMException,
         IllegalArgumentException {
         if (cfg == null) {
@@ -174,38 +144,10 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
                 final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
 
-                switch (response.getStatus()) {
-                    case 550: {
-                        final GeoCPMException e = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                GeoCPMException.class);
-                        if (e != null) {
-                            throw e;
-                        }
-                        // fall-through
-                    }
-                    case 450: {
-                        final IllegalArgumentException e1 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalArgumentException.class);
-                        if (e1 != null) {
-                            throw e1;
-                        }
-                        // fall-through
-                    }
-                    case 451: {
-                        final IllegalStateException e2 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalStateException.class);
-                        if (e2 != null) {
-                            throw e2;
-                        }
-                        // fall-through
-                    }
-                    default: {
-                        throw new GeoCPMClientException("cannot remap exception", ex);
-                    }
-                }
+                GeoCPMServiceExceptionMapper.throwException(response, ex);
+
+                assert false : "unreachable code";                        // NOI18N
+                return null;
             } else {
                 final String message = "cannot start simulation: " + cfg; // NOI18N
                 LOG.error(message, ex);
@@ -215,7 +157,6 @@ public final class GeoCPMRestClient implements GeoCPMService {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public ExecutionStatus getStatus(final String runId) throws GeoCPMException, IllegalArgumentException {
         if ((runId == null) || runId.isEmpty()) {
             throw new IllegalArgumentException("runId must not be null"); // NOI18N
@@ -245,40 +186,12 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
                 final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
 
-                switch (response.getStatus()) {
-                    case 550: {
-                        final GeoCPMException e = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                GeoCPMException.class);
-                        if (e != null) {
-                            throw e;
-                        }
-                        // fall-through
-                    }
-                    case 450: {
-                        final IllegalArgumentException e1 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalArgumentException.class);
-                        if (e1 != null) {
-                            throw e1;
-                        }
-                        // fall-through
-                    }
-                    case 451: {
-                        final IllegalStateException e2 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalStateException.class);
-                        if (e2 != null) {
-                            throw e2;
-                        }
-                        // fall-through
-                    }
-                    default: {
-                        throw new GeoCPMClientException("cannot remap exception", ex); // NOI18N
-                    }
-                }
+                GeoCPMServiceExceptionMapper.throwException(response, ex);
+
+                assert false : "unreachable code";                               // NOI18N
+                return null;
             } else {
-                final String message = "could not get status for run: " + runId;       // NOI18N
+                final String message = "could not get status for run: " + runId; // NOI18N
                 LOG.error(message, ex);
                 throw new GeoCPMClientException(message, ex);
             }
@@ -286,7 +199,6 @@ public final class GeoCPMRestClient implements GeoCPMService {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public SimulationResult getResults(final String runId) throws GeoCPMException,
         IllegalArgumentException,
         IllegalStateException {
@@ -318,40 +230,12 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
                 final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
 
-                switch (response.getStatus()) {
-                    case 550: {
-                        final GeoCPMException e = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                GeoCPMException.class);
-                        if (e != null) {
-                            throw e;
-                        }
-                        // fall-through
-                    }
-                    case 450: {
-                        final IllegalArgumentException e1 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalArgumentException.class);
-                        if (e1 != null) {
-                            throw e1;
-                        }
-                        // fall-through
-                    }
-                    case 451: {
-                        final IllegalStateException e2 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalStateException.class);
-                        if (e2 != null) {
-                            throw e2;
-                        }
-                        // fall-through
-                    }
-                    default: {
-                        throw new GeoCPMClientException("cannot remap exception", ex); // NOI18N
-                    }
-                }
+                GeoCPMServiceExceptionMapper.throwException(response, ex);
+
+                assert false : "unreachable code";                                // NOI18N
+                return null;
             } else {
-                final String message = "could not get results for run: " + runId;      // NOI18N
+                final String message = "could not get results for run: " + runId; // NOI18N
                 LOG.error(message, ex);
                 throw new GeoCPMClientException(message, ex);
             }
@@ -359,7 +243,6 @@ public final class GeoCPMRestClient implements GeoCPMService {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public void cleanup(final String runId) throws GeoCPMException, IllegalArgumentException, IllegalStateException {
         if ((runId == null) || runId.isEmpty()) {
             throw new IllegalArgumentException("runId must not be null"); // NOI18N
@@ -384,40 +267,11 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
                 final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
 
-                switch (response.getStatus()) {
-                    case 550: {
-                        final GeoCPMException e = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                GeoCPMException.class);
-                        if (e != null) {
-                            throw e;
-                        }
-                        // fall-through
-                    }
-                    case 450: {
-                        final IllegalArgumentException e1 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalArgumentException.class);
-                        if (e1 != null) {
-                            throw e1;
-                        }
-                        // fall-through
-                    }
-                    case 451: {
-                        final IllegalStateException e2 = GeoCPMServiceExceptionMapper.fromResponse(
-                                response,
-                                IllegalStateException.class);
-                        if (e2 != null) {
-                            throw e2;
-                        }
-                        // fall-through
-                    }
-                    default: {
-                        throw new GeoCPMClientException("cannot remap exception", ex); // NOI18N
-                    }
-                }
+                GeoCPMServiceExceptionMapper.throwException(response, ex);
+
+                assert false : "unreachable code";                        // NOI18N
             } else {
-                final String message = "could not cleanup run: " + runId;              // NOI18N
+                final String message = "could not cleanup run: " + runId; // NOI18N
                 LOG.error(message, ex);
                 throw new GeoCPMClientException(message, ex);
             }
