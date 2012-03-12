@@ -11,10 +11,13 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.io.ReaderInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
+import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
 import javax.ws.rs.Consumes;
@@ -59,13 +62,19 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
     public static final String PATH_GET_STATUS = "/getStatus";           // NOI18N
     public static final String PATH_CLEANUP = "/cleanup";                // NOI18N
 
-    private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\GeoCPM.exe";                            // NOI18N
+//    private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\GeoCPM.exe";
+    private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\dyna.exe";                              // NOI18N
     private static final String LAUNCHER_EXE = "c:\\users\\wupp-model\\desktop\\launcher\\launcher.exe"; // NOI18N
 
-    private static final String DB_PASSWORD = "cismetz12"; // NOI18N
-//    private static final String DB_URL = "jdbc:postgresql://localhost:5432/sudplan_wupp"; // NOI18N
-    private static final String DB_URL = "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp"; // NOI18N
-    private static final String DB_USERNAME = "postgres";                                      // NOI18N
+    private static final String DB_PASSWORD = "cismetz12"; // NOI18N private static final String DB_URL =
+                                                           // "jdbc:postgresql://localhost:5432/sudplan_wupp"; // NOI18N
+
+    private static final String DB_URL = "jdbc:postgresql://kif:5432/simple_geocpm_test_db2"; // NOI18N private static
+                                                                                              // final String DB_URL =
+                                                                                              // "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp";
+                                                                                              //// NOI18N
+
+    private static final String DB_USERNAME = "postgres"; // NOI18N
 
     //~ Methods ----------------------------------------------------------------
 
@@ -84,10 +93,26 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
         try {
             // FIXME: add support for plain text data as specified in D6.2.2
             // FIXME: add dyna support
-            final GZIPInputStream is = new GZIPInputStream(new ReaderInputStream(
-                        new StringReader(cfg.getGeocpmData())));
+            final GZIPInputStream geocpmIS = new GZIPInputStream(new ReaderInputStream(
+                        new StringReader(cfg.getGeocpmData()),
+                        "windows-1256"));
+
+            final GZIPInputStream dynaIS = new GZIPInputStream(new ReaderInputStream(
+                        new StringReader(cfg.getDynaData()),
+                        "windows-1256"));
+
+            final ByteArrayInputStream geocpmID = new ByteArrayInputStream(cfg.getGeocpmIData());
+            final ByteArrayInputStream geocpmFD = new ByteArrayInputStream(cfg.getGeocpmFData());
+            final ByteArrayInputStream geocpmSD = new ByteArrayInputStream(cfg.getGeocpmSData());
+
             final GeoCPMImport geoCPMImport = new GeoCPMImport(
-                    is,
+                    geocpmIS,
+                    dynaIS,
+                    geocpmID,
+                    geocpmFD,
+                    geocpmSD,
+                    cfg.getGeocpmFolder(),
+                    cfg.getDynaFolder(),
                     DB_USERNAME,
                     DB_PASSWORD,
                     DB_URL);
@@ -115,19 +140,24 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
             throw new IllegalArgumentException("rainevent must not be null"); // NOI18N
         }
 
-        final File outFile;
+        final File tmpDir = new File(System.getProperty("java.io.tmpdir"));           // NOI18N
+        final File outDir = new File(tmpDir, "geocpm_" + System.currentTimeMillis()); // NOI18N
+
+//        final File outFile;
         try {
             // FIXME: use dyna
-            final File tmpDir = new File(System.getProperty("java.io.tmpdir"));           // NOI18N
-            final File outDir = new File(tmpDir, "geocpm_" + System.currentTimeMillis()); // NOI18N
+// final File tmpDir = new File(System.getProperty("java.io.tmpdir"));           // NOI18N
+// final File outDir = new File(tmpDir, "geocpm_" + System.currentTimeMillis()); // NOI18N
             if (!outDir.mkdir()) {
-                throw new IOException("cannot create tmp dir");                           // NOI18N
+                throw new IOException("cannot create tmp dir"); // NOI18N
             }
-            outFile = new File(outDir, "GeoCPM.ein");                                     // NOI18N
-            final GeoCPMExport export = new GeoCPMExport(cfg.getGeocpmCfg(), outFile, DB_USERNAME, DB_PASSWORD, DB_URL);
+
+//            outFile = new File(outDir, "GeoCPM.ein");// NOI18N
+
+            final GeoCPMExport export = new GeoCPMExport(cfg.getGeocpmCfg(), outDir, DB_USERNAME, DB_PASSWORD, DB_URL);
             export.doExport();
         } catch (final Exception e) {
-            final String message = "error reading simulation configuration: " + cfg;      // NOI18N
+            final String message = "error reading simulation configuration: " + cfg; // NOI18N
             LOG.error(message, e);
 
             throw new GeoCPMException(message, e);
@@ -135,14 +165,14 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
 
         try {
             final String command = LAUNCHER_EXE
-                        + " -w "       // NOI18N
-                        + outFile.getParentFile().getAbsolutePath()
-                        + " -a "       // NOI18N
+                        + " -w "                    // NOI18N
+                        + outDir.getAbsolutePath()  // outFile.getParentFile().getAbsolutePath()
+                        + " -a "                    // NOI18N
                         + GEOCPM_EXE
-                        + " --pid"     // NOI18N
-                        + " --killWER" // NOI18N
-                        + " --args "   // NOI18N
-                        + outFile.getAbsolutePath();
+                        + " --pid"                  // NOI18N
+                        + " --killWER"              // NOI18N
+                        + " --args "                // NOI18N
+                        + outDir.getAbsolutePath(); // outFile.getAbsolutePath();
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("launching command: " + command); // NOI18N
@@ -162,7 +192,8 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
                 throw new IOException("process was not finished gracefully: " + exitCode); // NOI18N
             }
 
-            final String taskId = GeoCPMUtils.createId(outFile, GeoCPMUtils.readPid(outFile.getParentFile()));
+//            final String taskId = GeoCPMUtils.createId(outFile, GeoCPMUtils.readPid(outFile.getParentFile()));
+            final String taskId = GeoCPMUtils.createId(new File(outDir, "GeoCPM.ein"), GeoCPMUtils.readPid(outDir));
 
             return new ExecutionStatus(ExecutionStatus.STARTED, taskId);
         } catch (final Exception e) {
@@ -269,6 +300,83 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
             }
         } else {
             throw new IllegalStateException("simulation with id '" + runId + "' is not in finished state"); // NOI18N
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
+        try {
+            final Properties p = new Properties();
+            p.put("log4j.appender.Remote", "org.apache.log4j.net.SocketAppender");
+            p.put("log4j.appender.Remote.remoteHost", "localhost");
+            p.put("log4j.appender.Remote.port", "4445");
+            p.put("log4j.appender.Remote.locationInfo", "true");
+            p.put("log4j.rootLogger", "ALL,Remote");
+            org.apache.log4j.PropertyConfigurator.configure(p);
+
+            final ImportConfig config = new ImportConfig();
+
+            final File geocpmFDFile = new File(
+                    "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a Nullvariante/GEOCPMF.D");
+            final File geocpmSDFile = new File(
+                    "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a Nullvariante/GEOCPMS.D");
+            final File geocpmIDFile = new File(
+                    "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a Nullvariante/GEOCPMI.D");
+
+            final byte[] geocpmFDBytes = new byte[(int)geocpmFDFile.length()];
+            final byte[] geocpmSDBytes = new byte[(int)geocpmSDFile.length()];
+            final byte[] geocpmIDBytes = new byte[(int)geocpmIDFile.length()];
+
+            final FileInputStream geocpmFDIn = new FileInputStream(geocpmFDFile);
+            final FileInputStream geocpmSDIn = new FileInputStream(geocpmSDFile);
+            final FileInputStream geocpmIDIn = new FileInputStream(geocpmIDFile);
+
+            geocpmFDIn.read(geocpmFDBytes);
+            geocpmSDIn.read(geocpmSDBytes);
+            geocpmIDIn.read(geocpmIDBytes);
+
+            geocpmFDIn.close();
+            geocpmSDIn.close();
+            geocpmIDIn.close();
+
+            config.setGeocpmFData(geocpmFDBytes);
+            config.setGeocpmSData(geocpmSDBytes);
+            config.setGeocpmIData(geocpmIDBytes);
+
+            // ---
+
+            final String geocpmData = GeoCPMUtils.readContentGzip(new File(
+                        "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_Nullvariante_T=100a/GeoCPM.ein"));
+
+            final String dynaData = GeoCPMUtils.readContentGzip(new File(
+                        "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a Nullvariante/DYNA.EIN"));
+
+            config.setGeocpmData(geocpmData);
+            config.setDynaData(dynaData);
+
+            // ---
+
+            config.setGeocpmFolder("GeoCPM_Nullvariante_T=100a");
+            config.setDynaFolder("GeoCPM_DVWK_T=100a Nullvariante");
+
+            final GeoCPMRestServiceImpl restService = new GeoCPMRestServiceImpl();
+            final ImportStatus status = restService.importConfiguration(config);
+
+            System.out.println("Import Status: GeoCPMId: " + status.getGeocpmId());
+
+            //
+            // this.importer = new GeoCPMImport(new FileInputStream(new
+            // File("/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_Nullvariante_T=100a/GeoCPM.ein")),//geocpmEin,
+            // new FileInputStream(new
+            // File("/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a
+            // Nullvariante/DYNA.EIN")), geocpmID, geocpmFD, geocpmSD, "GeoCPM_Nullvariante_T=100a", // geocpm folder
+            // "GeoCPM_DVWK_T=100a Nullvariante", // dyna folder DB_USER, DB_PWD, dbURL); this.importer.doImport();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

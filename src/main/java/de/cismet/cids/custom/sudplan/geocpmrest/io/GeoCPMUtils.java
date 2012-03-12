@@ -284,6 +284,50 @@ public final class GeoCPMUtils {
     }
 
     /**
+     * DOCUMENT ME!
+     *
+     * @param   file  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IOException               DOCUMENT ME!
+     * @throws  NullPointerException      DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     */
+    public static byte[] readBytes(final File file) throws IOException {
+        if (file == null) {
+            throw new NullPointerException();
+        }
+
+        if (!file.exists()) {
+            throw new IllegalArgumentException("File " + file + " does not exist");
+        }
+
+        if (file.isDirectory()) {
+            throw new IllegalArgumentException("File " + file + " is a directory");
+        }
+
+        final byte[] buffer = new byte[(int)file.length()];
+
+        FileInputStream fin = null;
+
+        try {
+            fin = new FileInputStream(file);
+            fin.read(buffer);
+        } catch (final IOException e) {
+            final String message = "error while reading bytes from file " + file;
+            LOG.error(message, e);
+            throw new IOException(message, e);
+        } finally {
+            if (fin != null) {
+                fin.close();
+            }
+        }
+
+        return buffer;
+    }
+
+    /**
      * Reads the content of a given file using Windows-1256 encoding.
      *
      * @param   toRead  file whose content shall be read

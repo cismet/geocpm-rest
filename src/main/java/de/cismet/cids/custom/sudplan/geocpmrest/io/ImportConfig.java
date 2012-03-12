@@ -22,8 +22,14 @@ public final class ImportConfig implements Serializable {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String geocpmData;
-    private String dynaData;
+    private String geocpmData; // GZIP representation of GEOCPM.EIN content
+    private String dynaData;   // GZIP representation of DYNA.EIN content
+    private byte[] geocpmFData;
+    private byte[] geocpmIData;
+    private byte[] geocpmSData;
+
+    private String geocpmFolder;
+    private String dynaFolder;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -33,18 +39,97 @@ public final class ImportConfig implements Serializable {
     public ImportConfig() {
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Creates a new ImportConfig object.
+     * /** * Creates a new ImportConfig object. * * @param geocpmData DOCUMENT ME! * @param dynaData DOCUMENT ME!
      *
-     * @param  geocpmData  DOCUMENT ME!
-     * @param  dynaData    DOCUMENT ME!
+     * @return  DOCUMENT ME!
      */
-    public ImportConfig(final String geocpmData, final String dynaData) {
-        this.geocpmData = geocpmData;
-        this.dynaData = dynaData;
+    public byte[] getGeocpmFData() {
+        return geocpmFData;
     }
 
-    //~ Methods ----------------------------------------------------------------
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geocpmFDData  DOCUMENT ME!
+     */
+    public void setGeocpmFData(final byte[] geocpmFDData) {
+        this.geocpmFData = geocpmFDData;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public byte[] getGeocpmIData() {
+        return geocpmIData;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geocpmIData  DOCUMENT ME!
+     */
+    public void setGeocpmIData(final byte[] geocpmIData) {
+        this.geocpmIData = geocpmIData;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public byte[] getGeocpmSData() {
+        return geocpmSData;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geocpmSData  DOCUMENT ME!
+     */
+    public void setGeocpmSData(final byte[] geocpmSData) {
+        this.geocpmSData = geocpmSData;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getDynaFolder() {
+        return dynaFolder;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  dynaFolder  DOCUMENT ME!
+     */
+    public void setDynaFolder(final String dynaFolder) {
+        this.dynaFolder = dynaFolder;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGeocpmFolder() {
+        return geocpmFolder;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geocpmFolder  DOCUMENT ME!
+     */
+    public void setGeocpmFolder(final String geocpmFolder) {
+        this.geocpmFolder = geocpmFolder;
+    }
 
     /**
      * DOCUMENT ME!
