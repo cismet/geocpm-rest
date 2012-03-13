@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 
-import java.util.zip.GZIPInputStream;
+
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -64,11 +64,10 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
     private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\dyna.exe";                              // NOI18N
     private static final String LAUNCHER_EXE = "c:\\users\\wupp-model\\desktop\\launcher\\launcher.exe"; // NOI18N
 
-    private static final String DB_PASSWORD = "cismetz12"; // NOI18N private static final String DB_URL =
-                                                           // "jdbc:postgresql://localhost:5432/sudplan_wupp"; // NOI18N
+    private static final String DB_PASSWORD = "cismetz12"; // NOI18N 
 
-    private static final String DB_URL = "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp"; // NOI18N 
-
+    private static final String DB_URL = "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp"; // NOI18N //"jdbc:postgresql://kif:5432/simple_geocpm_test_db2"; // NOI18N private static
+                                                                                             
     private static final String DB_USERNAME = "postgres"; // NOI18N
 
     //~ Methods ----------------------------------------------------------------
@@ -88,13 +87,21 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
         try {
             // FIXME: add support for plain text data as specified in D6.2.2
             // FIXME: add dyna support
-            final GZIPInputStream geocpmIS = new GZIPInputStream(new ReaderInputStream(
-                        new StringReader(cfg.getGeocpmData()),
-                        "windows-1256"));
+// final GZIPInputStream geocpmIS = new GZIPInputStream(new ReaderInputStream(
+// new StringReader(cfg.getGeocpmData()),
+// "windows-1256"));
+//
+// final GZIPInputStream dynaIS = new GZIPInputStream(new ReaderInputStream(
+// new StringReader(cfg.getDynaData()),
+// "windows-1256"));
 
-            final GZIPInputStream dynaIS = new GZIPInputStream(new ReaderInputStream(
-                        new StringReader(cfg.getDynaData()),
-                        "windows-1256"));
+            final ReaderInputStream geocpmIS = new ReaderInputStream(
+                    new StringReader(cfg.getGeocpmData()),
+                    "windows-1256");
+
+            final ReaderInputStream dynaIS = new ReaderInputStream(
+                    new StringReader(cfg.getDynaData()),
+                    "windows-1256");
 
             final ByteArrayInputStream geocpmID = new ByteArrayInputStream(cfg.getGeocpmIData());
             final ByteArrayInputStream geocpmFD = new ByteArrayInputStream(cfg.getGeocpmFData());
@@ -297,7 +304,7 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
             throw new IllegalStateException("simulation with id '" + runId + "' is not in finished state"); // NOI18N
         }
     }
-
+//
 //    /**
 //     * DOCUMENT ME!
 //     *
@@ -344,10 +351,10 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
 //
 //            // ---
 //
-//            final String geocpmData = GeoCPMUtils.readContentGzip(new File(
+//            final String geocpmData = GeoCPMUtils.readContent(new File(
 //                        "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_Nullvariante_T=100a/GeoCPM.ein"));
 //
-//            final String dynaData = GeoCPMUtils.readContentGzip(new File(
+//            final String dynaData = GeoCPMUtils.readContent(new File(
 //                        "/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a Nullvariante/DYNA.EIN"));
 //
 //            config.setGeocpmData(geocpmData);
@@ -358,18 +365,13 @@ public final class GeoCPMRestServiceImpl implements GeoCPMService {
 //            config.setGeocpmFolder("GeoCPM_Nullvariante_T=100a");
 //            config.setDynaFolder("GeoCPM_DVWK_T=100a Nullvariante");
 //
-//            final GeoCPMRestServiceImpl restService = new GeoCPMRestServiceImpl();
-//            final ImportStatus status = restService.importConfiguration(config);
+////            final GeoCPMRestServiceImpl restService = new GeoCPMRestServiceImpl();
+////            final ImportStatus status = restService.importConfiguration(config);
+//
+//            final GeoCPMService client = new GeoCPMRestClient("http://localhost:9988/GeoCPM");
+//            final ImportStatus status = client.importConfiguration(config);
 //
 //            System.out.println("Import Status: GeoCPMId: " + status.getGeocpmId());
-//
-//            //
-//            // this.importer = new GeoCPMImport(new FileInputStream(new
-//            // File("/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_Nullvariante_T=100a/GeoCPM.ein")),//geocpmEin,
-//            // new FileInputStream(new
-//            // File("/home/bfriedrich/Desktop/geocpm/2012-02-27/DYNA-GeoCPM_120131/GeoCPM_DVWK_T=100a
-//            // Nullvariante/DYNA.EIN")), geocpmID, geocpmFD, geocpmSD, "GeoCPM_Nullvariante_T=100a", // geocpm folder
-//            // "GeoCPM_DVWK_T=100a Nullvariante", // dyna folder DB_USER, DB_PWD, dbURL); this.importer.doImport();
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }

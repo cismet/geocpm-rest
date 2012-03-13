@@ -354,10 +354,10 @@ public final class GeoCPMUtils {
 
                 c = br.read();
 
-                // FIXME: this is a limit for the demo system
-                if (sb.length() > 16666) {
-                    break;
-                }
+//                // FIXME: this is a limit for the demo system
+//                if (sb.length() > 16666) {
+//                    break;
+//                }
             }
         } finally {
             if (br != null) {

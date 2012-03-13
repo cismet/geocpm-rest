@@ -9,6 +9,7 @@ package de.cismet.cids.custom.sudplan.geocpmrest;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -79,13 +80,16 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
         try {
             final Client c = getClient();
+
+//            http://jfarcand.wordpress.com/category/async-http-client/
+
             final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_IMPORT_CFG);
 
             // we send json and expect json
             final WebResource.Builder builder = webResource.type(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON);
 
-            final ClientResponse response = builder.post(ClientResponse.class, cfg);
+            final ClientResponse response = builder.put(ClientResponse.class, cfg);
 
             if (LOG.isInfoEnabled()) {
                 LOG.info("GeoCPM Wrapper Service response status for importConfiguration('" + cfg + "'): " // NOI18N
@@ -103,10 +107,10 @@ public final class GeoCPMRestClient implements GeoCPMService {
 
                 GeoCPMServiceExceptionMapper.throwException(response, ex);
 
-                assert false : "unreachable code";                        // NOI18N
+                assert false : "unreachable code";                    // NOI18N
                 return null;
             } else {
-                final String message = "cannot start simulation: " + cfg; // NOI18N
+                final String message = "cannot start import: " + cfg; // NOI18N
                 LOG.error(message, ex);
                 throw new GeoCPMClientException(message, ex);
             }
