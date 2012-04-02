@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import java.util.Properties;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -39,13 +40,14 @@ public final class GeoCPMUtils {
     private static final transient Logger LOG = Logger.getLogger(GeoCPMUtils.class);
 
     public static final String INPUT_FILE_NAME = "GeoCPM.ein";          // NOI18N
+    public static final String RESULTS_FOLDER = "0001";                 // NOI18N
     public static final String INFO_FILE_NAME = "GeoCPMInfo.aus";       // NOI18N
     public static final String MAX_FILE_NAME = "GeoCPMMax.aus";         // NOI18N
     public static final String SUBINFO_FILE_NAME = "GeoCPMSubInfo.aus"; // NOI18N
     public static final String RES_ELEMENT_NAME = "ResultsElement";     // NOI18N
     public static final String RES_ELEMENT_EXT = ".aus";                // NOI18N
-    public static final String GEOCPM_EXE = "GeoCPM.exe";               // NOI18N
-    public static final String PID_FILE = "GeoCPM.pid";                 // NOI18N
+    public static final String GEOCPM_EXE = "dyna.exe";                 // NOI18N
+    public static final String PID_FILE = "dyna.pid";                   // NOI18N
     public static final String TOKEN_RAINCURVE = "RAINCURVE";           // NOI18N
 
     //~ Constructors -----------------------------------------------------------
@@ -144,9 +146,26 @@ public final class GeoCPMUtils {
     }
 
     /**
+     * DOCUMENT ME!
+     *
+     * @param   file  DOCUMENT ME!
+     *
+     * @throws  IllegalStateException  DOCUMENT ME!
+     */
+    private static void checkFile(final File file) {
+        if (!file.exists()) {
+            throw new IllegalStateException("File " + file.getName() + " does not exist");
+        }
+
+        if (!file.canRead()) {
+            throw new IllegalStateException("File " + file.getName() + " can not be read");
+        }
+    }
+
+    /**
      * Reads the output of a GeoCPM run from the given working directory.
      *
-     * @param   workingDir  the working directory of the run
+     * @param   geocpmEinDir  workingDir the directory where the GeoCPM.EIN file is located
      *
      * @return  a {@link GeoCPMOutput} output with the run output
      *
@@ -155,39 +174,35 @@ public final class GeoCPMUtils {
      *                                    <code>.aus</code> files is unrecognised or if the content of the files cannot
      *                                    be read for any reason
      */
-    public static GeoCPMOutput readOutput(final File workingDir) {
-        if (workingDir == null) {
-            throw new IllegalArgumentException("working dir must not be null"); // NOI18N
-        }
-
-        final File[] geocpmOutFiles = workingDir.listFiles(new GeoCPMOutFilter());
-
-        if (geocpmOutFiles.length != 3) {
-            throw new IllegalStateException("unexpected number of output files: " + geocpmOutFiles.length); // NOI18N
+    public static GeoCPMOutput readOutput(final File geocpmEinDir) {
+        if (geocpmEinDir == null) {
+            throw new IllegalArgumentException("geocpm output folder must not be null"); // NOI18N
         }
 
         final GeoCPMOutput output = new GeoCPMOutput();
 
         try {
-            for (final File geocpmOutFile : geocpmOutFiles) {
-                if (INFO_FILE_NAME.equals(geocpmOutFile.getName())) {
-                    final GeoCPMInfo info = new GeoCPMInfo();
-                    info.content = readContent(geocpmOutFile);
-                    output.geoCPMInfo = info;
-                } else if (MAX_FILE_NAME.equals(geocpmOutFile.getName())) {
-                    final GeoCPMMax max = new GeoCPMMax();
-                    max.content = readContent(geocpmOutFile);
-                    output.geoCPMMax = max;
-                } else if (SUBINFO_FILE_NAME.equals(geocpmOutFile.getName())) {
-                    final GeoCPMSubInfo subinfo = new GeoCPMSubInfo();
-                    subinfo.content = readContent(geocpmOutFile);
-                    output.geoCPMSubInfo = subinfo;
-                } else {
-                    throw new IllegalStateException("unrecognised output file: " + geocpmOutFile); // NOI18N
-                }
-            }
+            final File geocpmSubInfo = new File(geocpmEinDir, SUBINFO_FILE_NAME);
+            checkFile(geocpmSubInfo);
+            final GeoCPMSubInfo subinfo = new GeoCPMSubInfo();
+            subinfo.content = readContent(geocpmSubInfo);
+            output.geoCPMSubInfo = subinfo;
 
-            final File[] resultElements = workingDir.listFiles(new ResultElementFilter());
+            final File resultsFolder = new File(geocpmEinDir, RESULTS_FOLDER);
+
+            final File geocpmInfo = new File(resultsFolder, INFO_FILE_NAME);
+            checkFile(geocpmInfo);
+            final GeoCPMInfo info = new GeoCPMInfo();
+            info.content = readContent(geocpmInfo);
+            output.geoCPMInfo = info;
+
+            final File geocpmMax = new File(resultsFolder, MAX_FILE_NAME);
+            checkFile(geocpmMax);
+            final GeoCPMMax max = new GeoCPMMax();
+            max.content = readContent(geocpmMax);
+            output.geoCPMMax = max;
+
+            final File[] resultElements = resultsFolder.listFiles(new ResultElementFilter());
 
             for (final File resultElementFile : resultElements) {
                 final ResultsElement resultElement = new ResultsElement();
@@ -200,7 +215,7 @@ public final class GeoCPMUtils {
                 output.resultsElements.add(resultElement);
             }
         } catch (final IOException e) {
-            final String message = "cannot read output in workingdir: " + workingDir; // NOI18N
+            final String message = "cannot read output in geocpm output dir: " + geocpmEinDir; // NOI18N
             LOG.error(message, e);
             throw new IllegalStateException(message, e);
         }
@@ -466,6 +481,59 @@ public final class GeoCPMUtils {
     }
 
     /**
+     * Reads-in export meta data from the specified directory.
+     *
+     * @param   dir  directory (which is usually the working directory) the export meta data shall be read from
+     *
+     * @return  export meta data
+     *
+     * @throws  GeoCPMException           if an error occurs while reading export meta data from dir
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     */
+    public static Properties getExportMetaData(final File dir) throws GeoCPMException {
+        if (dir == null) {
+            final String message = "Given directory must not be null";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
+        }
+
+        if (!dir.isDirectory()) {
+            final String message = "Given file has to be a directory";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
+        }
+
+        final File exportMetaDataFile = new File(dir.getAbsolutePath(), "geocpm_export_meta.properties");
+
+        if (!exportMetaDataFile.canRead()) {
+            final String message = "Can not read file " + exportMetaDataFile.getAbsolutePath();
+            LOG.error(message);
+            throw new GeoCPMException(message);
+        }
+
+        final Properties exportMetaData = new Properties();
+        FileInputStream fin = null;
+        try {
+            fin = new FileInputStream(exportMetaDataFile);
+            exportMetaData.load(fin);
+            return exportMetaData;
+        } catch (final Exception ex) {
+            final String message = "An error occurred while loading export meta data";
+            LOG.error(message, ex);
+            throw new GeoCPMException(message, ex);
+        } finally {
+            if (fin != null) {
+                try {
+                    fin.close();
+                } catch (final IOException ex) {
+                    LOG.error(ex.getMessage(), ex);
+                    throw new GeoCPMException(ex.getMessage(), ex);
+                }
+            }
+        }
+    }
+
+    /**
      * Finds the process id for a given run id.
      *
      * @param   id  the run id
@@ -517,12 +585,12 @@ public final class GeoCPMUtils {
                         boolean running = true;
                         while (running) {
                             try {
-                                final int c = err.read();
-                                if (c >= 0) {
-                                    System.out.print((char)c);
-                                } else {
-                                    running = false;
+                                final BufferedReader reader = new BufferedReader(new InputStreamReader(out));
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    LOG.info(line);
                                 }
+                                running = false;
                             } catch (final Exception e) {
                                 LOG.error("error while draining system err for process: " + process, e); // NOI18N
                             }
@@ -546,12 +614,12 @@ public final class GeoCPMUtils {
                         boolean running = true;
                         while (running) {
                             try {
-                                final int c = out.read();
-                                if (c >= 0) {
-                                    System.out.print((char)c);
-                                } else {
-                                    running = false;
+                                final BufferedReader reader = new BufferedReader(new InputStreamReader(err));
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    LOG.warn(line);
                                 }
+                                running = false;
                             } catch (final Exception e) {
                                 LOG.error("error while draining system out for process: " + process, e); // NOI18N
                             }
@@ -614,7 +682,8 @@ public final class GeoCPMUtils {
 
             // we did not find the running process, we check for the info file which is present when the run is finished
             if (status.getStatusDesc() == null) {
-                final File[] infoFile = workingDir.listFiles(new RunFinishedFilter());
+                final File resultsFolder = new File(workingDir, RESULTS_FOLDER);
+                final File[] infoFile = resultsFolder.listFiles(new RunFinishedFilter());
 
                 assert infoFile.length < 2 : "the run finished filter does not accept more than one file"; // NOI18N
 

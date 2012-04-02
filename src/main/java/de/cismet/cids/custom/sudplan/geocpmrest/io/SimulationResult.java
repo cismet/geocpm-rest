@@ -9,8 +9,6 @@ package de.cismet.cids.custom.sudplan.geocpmrest.io;
 
 import java.io.Serializable;
 
-import java.net.URL;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -25,8 +23,10 @@ public final class SimulationResult implements Serializable {
     //~ Instance fields --------------------------------------------------------
 
     private String geocpmInfo;
-    private URL wmsResults;
     private String taskId;
+
+    private String wmsGetCapabilitiesRequest;
+    private String layerName;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -39,14 +39,19 @@ public final class SimulationResult implements Serializable {
     /**
      * Creates a new SimulationResult object.
      *
-     * @param  geocpmInfo  DOCUMENT ME!
-     * @param  wmsResults  DOCUMENT ME!
-     * @param  taskId      DOCUMENT ME!
+     * @param  geocpmInfo                 DOCUMENT ME!
+     * @param  taskId                     DOCUMENT ME!
+     * @param  wmsGetCapabilitiesRequest  wmsResults DOCUMENT ME!
+     * @param  layerName                  DOCUMENT ME!
      */
-    public SimulationResult(final String geocpmInfo, final URL wmsResults, final String taskId) {
+    public SimulationResult(final String geocpmInfo,
+            final String taskId,
+            final String wmsGetCapabilitiesRequest,
+            final String layerName) {
         this.geocpmInfo = geocpmInfo;
-        this.wmsResults = wmsResults;
         this.taskId = taskId;
+        this.wmsGetCapabilitiesRequest = wmsGetCapabilitiesRequest;
+        this.layerName = layerName;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,16 +97,34 @@ public final class SimulationResult implements Serializable {
      *
      * @return  DOCUMENT ME!
      */
-    public URL getWmsResults() {
-        return wmsResults;
+    public String getLayerName() {
+        return layerName;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  wmsResults  DOCUMENT ME!
+     * @param  layerName  DOCUMENT ME!
      */
-    public void setWmsResults(final URL wmsResults) {
-        this.wmsResults = wmsResults;
+    public void setLayerName(final String layerName) {
+        this.layerName = layerName;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getWmsGetCapabilitiesRequest() {
+        return wmsGetCapabilitiesRequest;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  wmsGetCapabilitiesRequest  DOCUMENT ME!
+     */
+    public void setWmsGetCapabilitiesRequest(final String wmsGetCapabilitiesRequest) {
+        this.wmsGetCapabilitiesRequest = wmsGetCapabilitiesRequest;
     }
 }

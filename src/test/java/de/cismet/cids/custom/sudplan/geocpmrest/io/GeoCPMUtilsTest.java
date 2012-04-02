@@ -39,6 +39,7 @@ public class GeoCPMUtilsTest {
     //~ Instance fields --------------------------------------------------------
 
     private transient File workingDir;
+    private transient File resultsDir;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -92,6 +93,25 @@ public class GeoCPMUtilsTest {
         } else {
             if (!workingDir.mkdirs()) {
                 throw new IllegalStateException("cannot run tests, working directory cannot be created: " + workingDir);
+            }
+        }
+        
+       resultsDir = new File(workingDir, "0001");
+
+        if (resultsDir.exists()) {
+            if (!resultsDir.isDirectory()) {
+                throw new IllegalStateException("cannot run tests, results directory exists and is not a directory: "
+                            + resultsDir);
+            } else if (!resultsDir.canRead()) {
+                throw new IllegalStateException("cannot run tests, no read permission for results directory: "
+                            + resultsDir);
+            } else if (!resultsDir.canWrite()) {
+                throw new IllegalStateException("cannot run tests, no write permission for results directory: "
+                            + resultsDir);
+            }
+        } else {
+            if (!resultsDir.mkdirs()) {
+                throw new IllegalStateException("cannot run tests, results directory cannot be created: " + resultsDir);
             }
         }
     }
@@ -373,19 +393,19 @@ public class GeoCPMUtilsTest {
     public void testReadOutput() throws Exception {
         System.out.println("TEST " + getCurrentMethodName());
 
-        writeFile(GeoCPMUtils.INFO_FILE_NAME);
-        writeFile(GeoCPMUtils.MAX_FILE_NAME);
-        writeFile(GeoCPMUtils.SUBINFO_FILE_NAME);
-        writeFile("ResultsElement831.aus");
-        writeFile("ResultsElement835.aus");
-        writeFile("ResultsElement836.aus");
-        writeFile("ResultsElement1126.aus");
-        writeFile("ResultsElement1128.aus");
-        writeFile("ResultsElement1129.aus");
-        writeFile("ResultsElement1130.aus");
-        writeFile("ResultsElement1131.aus");
-        writeFile("ResultsElement1132.aus");
-        writeFile("ResultsElement1139.aus");
+        writeFile(GeoCPMUtils.INFO_FILE_NAME, this.resultsDir);
+        writeFile(GeoCPMUtils.MAX_FILE_NAME, this.resultsDir);
+        writeFile(GeoCPMUtils.SUBINFO_FILE_NAME, this.workingDir);
+        writeFile("ResultsElement831.aus", this.resultsDir);
+        writeFile("ResultsElement835.aus", this.resultsDir);
+        writeFile("ResultsElement836.aus", this.resultsDir);
+        writeFile("ResultsElement1126.aus", this.resultsDir);
+        writeFile("ResultsElement1128.aus", this.resultsDir);
+        writeFile("ResultsElement1129.aus", this.resultsDir);
+        writeFile("ResultsElement1130.aus", this.resultsDir);
+        writeFile("ResultsElement1131.aus", this.resultsDir);
+        writeFile("ResultsElement1132.aus", this.resultsDir);
+        writeFile("ResultsElement1139.aus", this.resultsDir);
 
         final GeoCPMOutput output = GeoCPMUtils.readOutput(workingDir);
 
@@ -460,9 +480,9 @@ public class GeoCPMUtilsTest {
      *
      * @throws  IOException  DOCUMENT ME!
      */
-    private void writeFile(final String resource) throws IOException {
+    private void writeFile(final String resource, final File targetDir) throws IOException {
         final BufferedInputStream bis = new BufferedInputStream(getClass().getResourceAsStream(resource));
-        final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(new File(workingDir, resource)));
+        final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(new File(targetDir, resource)));
         final byte[] buff = new byte[1024];
         int read = bis.read(buff);
         while (read != -1) {

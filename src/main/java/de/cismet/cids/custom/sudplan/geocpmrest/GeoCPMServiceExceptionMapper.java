@@ -95,7 +95,6 @@ public final class GeoCPMServiceExceptionMapper {
      * DOCUMENT ME!
      *
      * @param   errorResponse  DOCUMENT ME!
-     * @param   original       DOCUMENT ME!
      *
      * @throws  GeoCPMException           DOCUMENT ME!
      * @throws  GeoCPMClientException     DOCUMENT ME!
@@ -103,8 +102,10 @@ public final class GeoCPMServiceExceptionMapper {
      * @throws  IllegalStateException     DOCUMENT ME!
      */
     @SuppressWarnings("fallthrough")
-    public static void throwException(final ClientResponse errorResponse, final Exception original)
-            throws GeoCPMException, GeoCPMClientException, IllegalArgumentException, IllegalStateException {
+    public static void throwException(final ClientResponse errorResponse) throws GeoCPMException,
+        GeoCPMClientException,
+        IllegalArgumentException,
+        IllegalStateException {
         switch (errorResponse.getStatus()) {
             case 550: {
                 final GeoCPMException e = GeoCPMServiceExceptionMapper.fromResponse(
@@ -134,7 +135,8 @@ public final class GeoCPMServiceExceptionMapper {
                 // fall-through
             }
             default: {
-                throw new GeoCPMClientException("cannot remap exception", original); // NOI18N
+                throw new GeoCPMClientException("cannot remap exception for error status: "
+                            + errorResponse.getStatus()); // NOI18N
             }
         }
     }

@@ -72,49 +72,70 @@ public final class GeoCPMRestClient implements GeoCPMService {
         return client;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   <T>         DOCUMENT ME!
+     * @param   response    DOCUMENT ME!
+     * @param   entityType  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  GeoCPMClientException     DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     * @throws  IllegalStateException     DOCUMENT ME!
+     */
+    private <T> T handleResponse(final ClientResponse response, final Class<T> entityType) throws GeoCPMException,
+        GeoCPMClientException,
+        IllegalArgumentException,
+        IllegalStateException {
+        this.checkResponseForError(response);
+
+        return response.getEntity(entityType);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   response  DOCUMENT ME!
+     *
+     * @throws  GeoCPMException           DOCUMENT ME!
+     * @throws  GeoCPMClientException     DOCUMENT ME!
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     * @throws  IllegalStateException     DOCUMENT ME!
+     */
+    private void checkResponseForError(final ClientResponse response) throws GeoCPMException,
+        GeoCPMClientException,
+        IllegalArgumentException,
+        IllegalStateException {
+        if (response.getStatus() >= 300) {
+            GeoCPMServiceExceptionMapper.throwException(response);
+        }
+    }
+
     @Override
     public ImportStatus importConfiguration(final ImportConfig cfg) throws GeoCPMException, IllegalArgumentException {
         if (cfg == null) {
             throw new IllegalArgumentException("cfg must not be null"); // NOI18N
         }
 
-        try {
-            final Client c = getClient();
+        final Client c = getClient();
 
-//            http://jfarcand.wordpress.com/category/async-http-client/
+        final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_IMPORT_CFG);
 
-            final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_IMPORT_CFG);
+        // we send json and expect json
+        final WebResource.Builder builder = webResource.type(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON);
 
-            // we send json and expect json
-            final WebResource.Builder builder = webResource.type(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON);
+        final ClientResponse response = builder.put(ClientResponse.class, cfg);
 
-            final ClientResponse response = builder.put(ClientResponse.class, cfg);
-
-            if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status for importConfiguration('" + cfg + "'): " // NOI18N
-                            + response.getStatus()); // NOI18N
-            }
-
-            return response.getEntity(ImportStatus.class);
-        } catch (final Exception ex) {
-            if (ex instanceof UniformInterfaceException) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("exception during request, remapping", ex); // NOI18N
-                }
-
-                final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
-
-                GeoCPMServiceExceptionMapper.throwException(response, ex);
-
-                assert false : "unreachable code";                    // NOI18N
-                return null;
-            } else {
-                final String message = "cannot start import: " + cfg; // NOI18N
-                LOG.error(message, ex);
-                throw new GeoCPMClientException(message, ex);
-            }
+        if (LOG.isInfoEnabled()) {
+            LOG.info("GeoCPM Wrapper Service response status for importConfiguration('" + cfg + "'): " // NOI18N
+                        + response.getStatus()); // NOI18N
         }
+
+        return this.handleResponse(response, ImportStatus.class);
     }
 
     @Override
@@ -124,40 +145,21 @@ public final class GeoCPMRestClient implements GeoCPMService {
             throw new IllegalArgumentException("cfg must not be null"); // NOI18N
         }
 
-        try {
-            final Client c = getClient();
-            final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_START_SIM);
+        final Client c = getClient();
+        final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_START_SIM);
 
-            // we send json and expect json
-            final WebResource.Builder builder = webResource.type(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON);
+        // we send json and expect json
+        final WebResource.Builder builder = webResource.type(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON);
 
-            final ClientResponse response = builder.post(ClientResponse.class, cfg);
+        final ClientResponse response = builder.post(ClientResponse.class, cfg);
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status for startSimulation('" + cfg + "'): " // NOI18N
-                            + response.getStatus()); // NOI18N
-            }
-
-            return response.getEntity(ExecutionStatus.class);
-        } catch (final Exception ex) {
-            if (ex instanceof UniformInterfaceException) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("exception during request, remapping", ex); // NOI18N
-                }
-
-                final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
-
-                GeoCPMServiceExceptionMapper.throwException(response, ex);
-
-                assert false : "unreachable code";                        // NOI18N
-                return null;
-            } else {
-                final String message = "cannot start simulation: " + cfg; // NOI18N
-                LOG.error(message, ex);
-                throw new GeoCPMClientException(message, ex);
-            }
+        if (LOG.isInfoEnabled()) {
+            LOG.info("GeoCPM Wrapper Service response status for startSimulation('" + cfg + "'): " // NOI18N
+                        + response.getStatus()); // NOI18N
         }
+
+        return handleResponse(response, ExecutionStatus.class);
     }
 
     @Override
@@ -166,40 +168,21 @@ public final class GeoCPMRestClient implements GeoCPMService {
             throw new IllegalArgumentException("runId must not be null"); // NOI18N
         }
 
-        try {
-            final Client c = getClient();
-            final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_GET_STATUS);
+        final Client c = getClient();
+        final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_GET_STATUS);
 
-            // we expect json
-            final WebResource.Builder builder = webResource.queryParam(GeoCPMRestServiceImpl.PARAM_RUN_ID, runId)
-                        .accept(MediaType.APPLICATION_JSON);
+        // we expect json
+        final WebResource.Builder builder = webResource.queryParam(GeoCPMRestServiceImpl.PARAM_RUN_ID, runId)
+                    .accept(MediaType.APPLICATION_JSON);
 
-            final ClientResponse response = builder.get(ClientResponse.class);
+        final ClientResponse response = builder.get(ClientResponse.class);
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status for getStatus('" + runId + "'): " // NOI18N
-                            + response.getStatus());
-            }
-
-            return response.getEntity(ExecutionStatus.class);
-        } catch (final Exception ex) {
-            if (ex instanceof UniformInterfaceException) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("exception during request, remapping", ex); // NOI18N
-                }
-
-                final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
-
-                GeoCPMServiceExceptionMapper.throwException(response, ex);
-
-                assert false : "unreachable code";                               // NOI18N
-                return null;
-            } else {
-                final String message = "could not get status for run: " + runId; // NOI18N
-                LOG.error(message, ex);
-                throw new GeoCPMClientException(message, ex);
-            }
+        if (LOG.isInfoEnabled()) {
+            LOG.info("GeoCPM Wrapper Service response status for getStatus('" + runId + "'): " // NOI18N
+                        + response.getStatus());
         }
+
+        return handleResponse(response, ExecutionStatus.class);
     }
 
     @Override
@@ -210,40 +193,21 @@ public final class GeoCPMRestClient implements GeoCPMService {
             throw new IllegalArgumentException("runId must not be null"); // NOI18N
         }
 
-        try {
-            final Client c = getClient();
-            final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_GET_RESULTS);
+        final Client c = getClient();
+        final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_GET_RESULTS);
 
-            // we expect json
-            final WebResource.Builder builder = webResource.queryParam(GeoCPMRestServiceImpl.PARAM_RUN_ID, runId)
-                        .accept(MediaType.APPLICATION_JSON);
+        // we expect json
+        final WebResource.Builder builder = webResource.queryParam(GeoCPMRestServiceImpl.PARAM_RUN_ID, runId)
+                    .accept(MediaType.APPLICATION_JSON);
 
-            final ClientResponse response = builder.get(ClientResponse.class);
+        final ClientResponse response = builder.get(ClientResponse.class);
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status for getResults('" + runId + "'): " // NOI18N
-                            + response.getStatus());
-            }
-
-            return response.getEntity(SimulationResult.class);
-        } catch (final Exception ex) {
-            if (ex instanceof UniformInterfaceException) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("exception during request, remapping", ex); // NOI18N
-                }
-
-                final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
-
-                GeoCPMServiceExceptionMapper.throwException(response, ex);
-
-                assert false : "unreachable code";                                // NOI18N
-                return null;
-            } else {
-                final String message = "could not get results for run: " + runId; // NOI18N
-                LOG.error(message, ex);
-                throw new GeoCPMClientException(message, ex);
-            }
+        if (LOG.isInfoEnabled()) {
+            LOG.info("GeoCPM Wrapper Service response status for getResults('" + runId + "'): " // NOI18N
+                        + response.getStatus());
         }
+
+        return this.handleResponse(response, SimulationResult.class);
     }
 
     @Override
@@ -252,33 +216,17 @@ public final class GeoCPMRestClient implements GeoCPMService {
             throw new IllegalArgumentException("runId must not be null"); // NOI18N
         }
 
-        try {
-            final Client c = getClient();
-            final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_CLEANUP);
+        final Client c = getClient();
+        final WebResource webResource = c.resource(rootResource + GeoCPMRestServiceImpl.PATH_CLEANUP);
 
-            // we send the runid and expect nothing
-            final ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class, runId);
+        // we send the runid and expect nothing
+        final ClientResponse response = webResource.type(MediaType.TEXT_PLAIN).post(ClientResponse.class, runId);
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("GeoCPM Wrapper Service response status for cleanup('" + runId + "'): " // NOI18N
-                            + response.getStatus());
-            }
-        } catch (final Exception ex) {
-            if (ex instanceof UniformInterfaceException) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("exception during request, remapping", ex); // NOI18N
-                }
-
-                final ClientResponse response = ((UniformInterfaceException)ex).getResponse();
-
-                GeoCPMServiceExceptionMapper.throwException(response, ex);
-
-                assert false : "unreachable code";                        // NOI18N
-            } else {
-                final String message = "could not cleanup run: " + runId; // NOI18N
-                LOG.error(message, ex);
-                throw new GeoCPMClientException(message, ex);
-            }
+        if (LOG.isInfoEnabled()) {
+            LOG.info("GeoCPM Wrapper Service response status for cleanup('" + runId + "'): " // NOI18N
+                        + response.getStatus());
         }
+
+        this.checkResponseForError(response);
     }
 }

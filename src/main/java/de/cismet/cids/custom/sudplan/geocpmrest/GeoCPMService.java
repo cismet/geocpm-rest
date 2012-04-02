@@ -7,6 +7,10 @@
 ****************************************************/
 package de.cismet.cids.custom.sudplan.geocpmrest;
 
+import com.wordnik.swagger.core.Api;
+
+import javax.ws.rs.Path;
+
 import de.cismet.cids.custom.sudplan.geocpmrest.io.ExecutionStatus;
 import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMException;
 import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportConfig;

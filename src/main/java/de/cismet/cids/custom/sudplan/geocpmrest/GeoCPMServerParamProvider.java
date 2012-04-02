@@ -32,8 +32,13 @@ public final class GeoCPMServerParamProvider implements ServerParamProvider {
     @Override
     public Map<String, String> getServerParams() {
         final Map<String, String> params = new HashMap<String, String>(1);
-        params.put(PARAM_JERSEY_PROPERTY_PACKAGES, "de.cismet.cids.custom.sudplan.geocpmrest"); // NOI18N
-        params.put(PARAM_DEFAULT_IDLE_THREAD_TIMEOUT, String.valueOf(Integer.MAX_VALUE));       // NOI18N
+        params.put(
+            PARAM_JERSEY_PROPERTY_PACKAGES,
+            "de.cismet.cids.custom.sudplan.geocpmrest;com.wordnik.swagger.jaxrs;de.cismet.cids.custom.sudplan.geocpmrest.io"); // NOI18N
+        params.put(PARAM_DEFAULT_IDLE_THREAD_TIMEOUT, String.valueOf(Integer.MAX_VALUE));                                      // NOI18N
+
+        params.put("swagger.version", "1.0");
+        params.put("swagger.api.basepath", "http://localhost:9988/api");
 
         return Collections.unmodifiableMap(params);
     }
