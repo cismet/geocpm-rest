@@ -7,9 +7,6 @@
 ****************************************************/
 package de.cismet.cids.custom.sudplan.geocpmrest;
 
-import com.sun.grizzly.http.SelectorThread;
-import com.sun.grizzly.http.SelectorThreadConfig;
-
 import org.openide.util.lookup.ServiceProvider;
 
 import java.util.Collections;
@@ -37,8 +34,11 @@ public final class GeoCPMServerParamProvider implements ServerParamProvider {
             "de.cismet.cids.custom.sudplan.geocpmrest;com.wordnik.swagger.jaxrs;de.cismet.cids.custom.sudplan.geocpmrest.io"); // NOI18N
         params.put(PARAM_DEFAULT_IDLE_THREAD_TIMEOUT, String.valueOf(Integer.MAX_VALUE));                                      // NOI18N
 
-        params.put("swagger.version", "1.0");
-        params.put("swagger.api.basepath", "http://localhost:9988/api");
+        params.put("swagger.version", "1.0");                            // NOI18N
+        params.put("swagger.api.basepath", "http://localhost:9988/api"); // NOI18N
+
+        // FIXME does not work on windows params.put(PARAM_STATIC_RESOURCE_PATH,
+        // GeoCPMServerParamProvider.class.getResource("/swaggerui").getFile()); // NOI18N
 
         return Collections.unmodifiableMap(params);
     }

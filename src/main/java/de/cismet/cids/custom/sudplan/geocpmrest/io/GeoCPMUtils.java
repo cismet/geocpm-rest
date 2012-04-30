@@ -243,7 +243,7 @@ public final class GeoCPMUtils {
                 });
 
         if (infoFileArray.length == 1) {
-            return readContentGzip(infoFileArray[0]);
+            return readContent(infoFileArray[0]);
         } else {
             throw new IllegalStateException("there is not exactly one info file: " + workingDir); // NOI18N
         }

@@ -10,6 +10,7 @@ package de.cismet.cids.custom.sudplan.geocpmrest.io;
 import java.io.Serializable;
 
 import java.net.URL;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -28,7 +29,6 @@ public final class SimulationResult implements Serializable {
 
     private String wmsGetCapabilitiesRequest;
     private String layerName;
-    private URL wmsResults;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -58,24 +58,6 @@ public final class SimulationResult implements Serializable {
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public URL getWmsResults() {
-        return wmsResults;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  wmsResults  DOCUMENT ME!
-     */
-    public void setWmsResults(final URL wmsResults) {
-        this.wmsResults = wmsResults;
-    }
-    
     /**
      * DOCUMENT ME!
      *

@@ -7,11 +7,7 @@
 ****************************************************/
 package de.cismet.cids.custom.sudplan.geocpmrest;
 
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import com.wordnik.swagger.core.*;
 import com.wordnik.swagger.jaxrs.JavaHelp;
 
 import org.apache.log4j.Logger;
@@ -25,23 +21,10 @@ import java.io.StringReader;
 
 import java.util.Properties;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import de.cismet.cids.custom.sudplan.geocpmrest.io.ExecutionStatus;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMException;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMUtils;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportConfig;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportStatus;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.Rainevent;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationConfig;
-import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationResult;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.*;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMAusImport;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMExport;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMImport;
@@ -80,11 +63,9 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
     private static final String DB_PASSWORD = "cismetz12";                                               // NOI18N
 
     // FIXME: set right DV url
-    private static final String DB_URL = "jdbc:postgresql://kif:5432/simple_geocpm_test_db3"; //
-                                                                                              // "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp";
-                                                                                              // // NOI18N
-                                                                                              // //"jdbc:postgresql://kif:5432/simple_geocpm_test_db2";
-                                                                                              //// NOI18N private static
+    private static final String DB_URL = "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp"; // NOI18N
+                                                                                               // "jdbc:postgresql://kif:5432/simple_geocpm_test_db3";
+                                                                                               ////
 
     private static final String DB_USERNAME = "postgres"; // NOI18N
 
@@ -150,6 +131,7 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
             final ByteArrayInputStream geocpmID = new ByteArrayInputStream(cfg.getGeocpmIData());
             final ByteArrayInputStream geocpmFD = new ByteArrayInputStream(cfg.getGeocpmFData());
             final ByteArrayInputStream geocpmSD = new ByteArrayInputStream(cfg.getGeocpmSData());
+            final ByteArrayInputStream geocpmND = new ByteArrayInputStream(cfg.getGeocpmNData());
 
             final GeoCPMImport geoCPMImport = new GeoCPMImport(
                     geocpmIS,
@@ -157,6 +139,7 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
                     geocpmID,
                     geocpmFD,
                     geocpmSD,
+                    geocpmND,
                     cfg.getGeocpmFolder(),
                     cfg.getDynaFolder(),
                     DB_USERNAME,
@@ -383,22 +366,6 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
             try {
                 final File workingDir = GeoCPMUtils.getWorkingDir(runId);
 
-                final Properties exportMetaData = GeoCPMUtils.getExportMetaData(workingDir);
-
-                final String geocpmEinFolderName = exportMetaData.getProperty(GeoCPMExport.PROP_GEOCPM_FOLDER);
-                if (geocpmEinFolderName == null) {
-                    final String message = "No export meta data entry for folder containing GeoCPM.EIN";
-                    LOG.error(message);
-                    throw new GeoCPMException(message);
-                }
-
-                final String configId = exportMetaData.getProperty(GeoCPMExport.PROP_CONFIG_ID);
-                if (configId == null) {
-                    final String message = "No configuration id entry for folder containing GeoCPM.EIN";
-                    LOG.error(message);
-                    throw new GeoCPMException(message);
-                }
-
                 final GeoCPMAusImport ausImport = new GeoCPMAusImport(
                         workingDir,
                         DB_USERNAME,
@@ -412,9 +379,21 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
 
                 // -----
 
+                final Properties exportMetaData = GeoCPMUtils.getExportMetaData(workingDir);
+
+                final String geocpmEinFolderName = exportMetaData.getProperty(GeoCPMExport.PROP_GEOCPM_FOLDER);
+                if (geocpmEinFolderName == null) {
+                    final String message = "No export meta data entry for folder containing GeoCPM.EIN";
+                    LOG.error(message);
+                    throw new GeoCPMException(message);
+                }
+
+                final File resultsFolder = new File(new File(workingDir, geocpmEinFolderName),
+                        GeoCPMAusImport.RESULTS_FOLDER);
+
                 final SimulationResult result = new SimulationResult();
                 result.setTaskId(runId);
-                result.setGeocpmInfo(GeoCPMUtils.readInfo(workingDir));
+                result.setGeocpmInfo(GeoCPMUtils.readInfo(resultsFolder));
                 result.setWmsGetCapabilitiesRequest(WMS_GETCAPABILITIES);
                 result.setLayerName(ausImport.getLayerName());
 

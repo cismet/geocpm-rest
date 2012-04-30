@@ -27,6 +27,7 @@ public final class ImportConfig implements Serializable {
     private byte[] geocpmFData;
     private byte[] geocpmIData;
     private byte[] geocpmSData;
+    private byte[] geocpmNData;
 
     private String geocpmFolder;
     private String dynaFolder;
@@ -40,6 +41,24 @@ public final class ImportConfig implements Serializable {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public byte[] getGeocpmNData() {
+        return geocpmNData;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geocpmNData  DOCUMENT ME!
+     */
+    public void setGeocpmNData(final byte[] geocpmNData) {
+        this.geocpmNData = geocpmNData;
+    }
 
     /**
      * /** * Creates a new ImportConfig object. * * @param geocpmData DOCUMENT ME! * @param dynaData DOCUMENT ME!
