@@ -7,7 +7,11 @@
 ****************************************************/
 package de.cismet.cids.custom.sudplan.geocpmrest;
 
-import com.wordnik.swagger.core.*;
+import com.wordnik.swagger.core.Api;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
+import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 import com.wordnik.swagger.jaxrs.JavaHelp;
 
 import org.apache.log4j.Logger;
@@ -17,14 +21,29 @@ import org.openide.util.io.ReaderInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 
+import java.util.MissingResourceException;
 import java.util.Properties;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import de.cismet.cids.custom.sudplan.geocpmrest.io.*;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ExecutionStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMException;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.GeoCPMUtils;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.ImportStatus;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.Rainevent;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationConfig;
+import de.cismet.cids.custom.sudplan.geocpmrest.io.SimulationResult;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMAusImport;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMExport;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMImport;
@@ -60,24 +79,112 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
 
     private static final String GEOCPM_EXE = "c:\\winkanal\\bin\\dyna.exe";                              // NOI18N
     private static final String LAUNCHER_EXE = "c:\\users\\wupp-model\\desktop\\launcher\\launcher.exe"; // NOI18N
-    private static final String DB_PASSWORD = "cismetz12";                                               // NOI18N
 
-    // FIXME: set right DV url
-    private static final String DB_URL = "jdbc:postgresql://192.168.100.12:5432/sudplan_wupp"; // NOI18N
-                                                                                               // "jdbc:postgresql://kif:5432/simple_geocpm_test_db3";
-                                                                                               ////
+    private static final String PROP_DB_USERNAME = "geoserver.database.user";     // NOI18N
+    private static final String PROP_DB_PASSWORD = "geoserver.database.password"; // NOI18N
+    private static final String PROP_DB_URL = "geoserver.database.url";           // NOI18N
 
-    private static final String DB_USERNAME = "postgres"; // NOI18N
+    private static final String PROP_REST_URL = "geoserver.rest.url";             // NOI18N
+    private static final String PROP_REST_USERNAME = "geoserver.rest.user";       // NOI18N
+    private static final String PROP_REST_PASSWORD = "geoserver.rest.password";   // NOI18N
+    private static final String PROP_REST_WORKSPACE = "geoserver.rest.workspace"; // NOI18N
 
-    private static final String REST_URL = "http://sudplanwp6.cismet.de/geoserver"; // NOI18N
-    private static final String REST_USER = "admin";                                // NOI18N
-    private static final String REST_PWD = "cismetz12";                             // NOI18N
-    private static final String WORKSPACE = "sudplan";                              // NOI18N
+    private static final String PROP_WMS_CAPABILITIES = "geoserver.wms.capabilities"; // NOI18N
 
-    private static final String WMS_GETCAPABILITIES =
-        "http://sudplanwp6.cismet.de/geoserver/ows?service=wms&version=1.1.1&request=GetCapabilities";
+    //~ Instance fields --------------------------------------------------------
+
+    private final String dbUsername;
+    private final String dbPassword;
+    private final String dbUrl;
+
+    private final String restUrl;
+    private final String restUsername;
+    private final String restPassword;
+    private final String restWorkspace;
+
+    private final String wmsCapabilities;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new GeoCPMRestServiceImpl object.
+     *
+     * @throws  IllegalStateException  DOCUMENT ME!
+     */
+    public GeoCPMRestServiceImpl() {
+        // FIXME: load properties from container when it supports this
+        final Properties geoserverProps = new Properties();
+        final InputStream is = getClass().getResourceAsStream("geoserver.properties");                 // NOI18N
+        try {
+            geoserverProps.load(is);
+        } catch (IOException ex) {
+            final String message = "cannot load geoserver properties, server will not be operational"; // NOI18N
+            LOG.fatal(message, ex);
+            throw new IllegalStateException(message, ex);
+        }
+
+        dbUsername = geoserverProps.getProperty(PROP_DB_USERNAME, ""); // NOI18N
+        dbPassword = geoserverProps.getProperty(PROP_DB_PASSWORD, ""); // NOI18N
+        dbUrl = geoserverProps.getProperty(PROP_DB_URL, "");           // NOI18N
+
+        restUsername = geoserverProps.getProperty(PROP_REST_USERNAME, "");   // NOI18N
+        restPassword = geoserverProps.getProperty(PROP_REST_PASSWORD, "");   // NOI18N
+        restUrl = geoserverProps.getProperty(PROP_REST_URL, "");             // NOI18N
+        restWorkspace = geoserverProps.getProperty(PROP_REST_WORKSPACE, ""); // NOI18N
+
+        wmsCapabilities = geoserverProps.getProperty(PROP_WMS_CAPABILITIES, ""); // NOI18N
+    }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @throws  MissingResourceException  DOCUMENT ME!
+     */
+    private void checkProperties() throws MissingResourceException {
+        if (dbUsername.isEmpty()) {
+            throw new MissingResourceException(
+                "geoserver db username not present",
+                "geoserver.properties",
+                PROP_DB_USERNAME);
+        }
+        if (dbPassword.isEmpty()) {
+            LOG.warn("geoserver db password is empty [geoserver.properties, " + PROP_DB_PASSWORD); // NOI18N
+        }
+        if (dbUrl.isEmpty()) {
+            throw new MissingResourceException("geoserver db url not present", "geoserver.properties", PROP_DB_URL);
+        }
+
+        if (restUsername.isEmpty()) {
+            throw new MissingResourceException(
+                "geoserver rest username not present",
+                "geoserver.properties",
+                PROP_REST_USERNAME);
+        }
+        if (restPassword.isEmpty()) {
+            throw new MissingResourceException(
+                "geoserver rest password not present",
+                "geoserver.properties",
+                PROP_REST_PASSWORD);
+        }
+        if (restUrl.isEmpty()) {
+            throw new MissingResourceException("geoserver rest url not present", "geoserver.properties", PROP_REST_URL);
+        }
+        if (restWorkspace.isEmpty()) {
+            throw new MissingResourceException(
+                "geoserver rest workspace not present",
+                "geoserver.properties",
+                PROP_REST_WORKSPACE);
+        }
+
+        if (wmsCapabilities.isEmpty()) {
+            throw new MissingResourceException(
+                "geoserver capabilities not present",
+                "geoserver.properties",
+                PROP_WMS_CAPABILITIES);
+        }
+    }
 
     @PUT
     @Path(PATH_IMPORT_CFG)
@@ -142,9 +249,9 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
                     geocpmND,
                     cfg.getGeocpmFolder(),
                     cfg.getDynaFolder(),
-                    DB_USERNAME,
-                    DB_PASSWORD,
-                    DB_URL);
+                    dbUsername,
+                    dbPassword,
+                    dbUrl);
             final int cfgId = geoCPMImport.doImport();
 
             return new ImportStatus(cfgId);
@@ -196,7 +303,7 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Start GeoCPM export");
             }
-            final GeoCPMExport export = new GeoCPMExport(cfg.getGeocpmCfg(), outDir, DB_USERNAME, DB_PASSWORD, DB_URL);
+            final GeoCPMExport export = new GeoCPMExport(cfg.getGeocpmCfg(), outDir, dbUsername, dbPassword, dbUrl);
             export.doExport();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("GeoCPM export has been finished successfully");
@@ -368,13 +475,13 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
 
                 final GeoCPMAusImport ausImport = new GeoCPMAusImport(
                         workingDir,
-                        DB_USERNAME,
-                        DB_PASSWORD,
-                        DB_URL,
-                        REST_USER,
-                        REST_PWD,
-                        REST_URL,
-                        WORKSPACE);
+                        dbUsername,
+                        dbPassword,
+                        dbUrl,
+                        restUsername,
+                        restPassword,
+                        restUrl,
+                        restWorkspace);
                 ausImport.go();
 
                 // -----
@@ -394,7 +501,7 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
                 final SimulationResult result = new SimulationResult();
                 result.setTaskId(runId);
                 result.setGeocpmInfo(GeoCPMUtils.readInfo(resultsFolder));
-                result.setWmsGetCapabilitiesRequest(WMS_GETCAPABILITIES);
+                result.setWmsGetCapabilitiesRequest(wmsCapabilities);
                 result.setLayerName(ausImport.getLayerName());
 
                 return result;
