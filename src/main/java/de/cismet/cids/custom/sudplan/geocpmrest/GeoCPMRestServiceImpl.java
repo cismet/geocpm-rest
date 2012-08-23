@@ -49,6 +49,7 @@ import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMExport;
 import de.cismet.cids.custom.sudplan.wupp.geocpm.ie.GeoCPMImport;
 
 import de.cismet.tools.FileUtils;
+import de.cismet.tools.PasswordEncrypter;
 
 /**
  * DOCUMENT ME!
@@ -117,22 +118,28 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
         final InputStream is = getClass().getResourceAsStream("geoserver.properties");                 // NOI18N
         try {
             geoserverProps.load(is);
-        } catch (IOException ex) {
+        } catch (final Exception ex) {
             final String message = "cannot load geoserver properties, server will not be operational"; // NOI18N
             LOG.fatal(message, ex);
             throw new IllegalStateException(message, ex);
         }
 
-        dbUsername = geoserverProps.getProperty(PROP_DB_USERNAME, ""); // NOI18N
-        dbPassword = geoserverProps.getProperty(PROP_DB_PASSWORD, ""); // NOI18N
-        dbUrl = geoserverProps.getProperty(PROP_DB_URL, "");           // NOI18N
+        dbUsername = geoserverProps.getProperty(PROP_DB_USERNAME, "");              // NOI18N
+        dbPassword = String.valueOf(PasswordEncrypter.decrypt(
+                    geoserverProps.getProperty(PROP_DB_PASSWORD, "").toCharArray(), // NOI18N
+                    false));
+        dbUrl = geoserverProps.getProperty(PROP_DB_URL, "");                        // NOI18N
 
-        restUsername = geoserverProps.getProperty(PROP_REST_USERNAME, "");   // NOI18N
-        restPassword = geoserverProps.getProperty(PROP_REST_PASSWORD, "");   // NOI18N
-        restUrl = geoserverProps.getProperty(PROP_REST_URL, "");             // NOI18N
-        restWorkspace = geoserverProps.getProperty(PROP_REST_WORKSPACE, ""); // NOI18N
+        restUsername = geoserverProps.getProperty(PROP_REST_USERNAME, "");            // NOI18N
+        restPassword = String.valueOf(PasswordEncrypter.decrypt(
+                    geoserverProps.getProperty(PROP_REST_PASSWORD, "").toCharArray(), // NOI18N
+                    false));
+        restUrl = geoserverProps.getProperty(PROP_REST_URL, "");                      // NOI18N
+        restWorkspace = geoserverProps.getProperty(PROP_REST_WORKSPACE, "");          // NOI18N
 
         wmsCapabilities = geoserverProps.getProperty(PROP_WMS_CAPABILITIES, ""); // NOI18N
+
+        checkProperties();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -145,43 +152,43 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
     private void checkProperties() throws MissingResourceException {
         if (dbUsername.isEmpty()) {
             throw new MissingResourceException(
-                "geoserver db username not present",
-                "geoserver.properties",
+                "geoserver db username not present", // NOI18N
+                "geoserver.properties", // NOI18N
                 PROP_DB_USERNAME);
         }
         if (dbPassword.isEmpty()) {
             LOG.warn("geoserver db password is empty [geoserver.properties, " + PROP_DB_PASSWORD); // NOI18N
         }
         if (dbUrl.isEmpty()) {
-            throw new MissingResourceException("geoserver db url not present", "geoserver.properties", PROP_DB_URL);
+            throw new MissingResourceException("geoserver db url not present", "geoserver.properties", PROP_DB_URL); // NOI18N
         }
 
         if (restUsername.isEmpty()) {
             throw new MissingResourceException(
-                "geoserver rest username not present",
-                "geoserver.properties",
+                "geoserver rest username not present", // NOI18N
+                "geoserver.properties", // NOI18N
                 PROP_REST_USERNAME);
         }
         if (restPassword.isEmpty()) {
             throw new MissingResourceException(
-                "geoserver rest password not present",
-                "geoserver.properties",
+                "geoserver rest password not present", // NOI18N
+                "geoserver.properties", // NOI18N
                 PROP_REST_PASSWORD);
         }
         if (restUrl.isEmpty()) {
-            throw new MissingResourceException("geoserver rest url not present", "geoserver.properties", PROP_REST_URL);
+            throw new MissingResourceException("geoserver rest url not present", "geoserver.properties", PROP_REST_URL); // NOI18N
         }
         if (restWorkspace.isEmpty()) {
             throw new MissingResourceException(
-                "geoserver rest workspace not present",
-                "geoserver.properties",
+                "geoserver rest workspace not present", // NOI18N
+                "geoserver.properties", // NOI18N
                 PROP_REST_WORKSPACE);
         }
 
         if (wmsCapabilities.isEmpty()) {
             throw new MissingResourceException(
-                "geoserver capabilities not present",
-                "geoserver.properties",
+                "geoserver capabilities not present", // NOI18N
+                "geoserver.properties", // NOI18N
                 PROP_WMS_CAPABILITIES);
         }
     }
