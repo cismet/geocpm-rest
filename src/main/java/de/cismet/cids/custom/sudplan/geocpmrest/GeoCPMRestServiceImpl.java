@@ -503,7 +503,7 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
                 }
 
                 final File resultsFolder = new File(new File(workingDir, geocpmEinFolderName),
-                        GeoCPMAusImport.RESULTS_FOLDER);
+                        ausImport.getResultsFolder().getName());
 
                 final SimulationResult result = new SimulationResult();
                 result.setTaskId(runId);
