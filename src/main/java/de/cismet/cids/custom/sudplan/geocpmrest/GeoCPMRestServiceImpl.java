@@ -502,8 +502,7 @@ public final class GeoCPMRestServiceImpl extends JavaHelp implements GeoCPMServi
                     throw new GeoCPMException(message);
                 }
 
-                final File resultsFolder = new File(new File(workingDir, geocpmEinFolderName),
-                        ausImport.getResultsFolder().getName());
+                final File resultsFolder = GeoCPMUtils.findResultsFolder(new File(workingDir, geocpmEinFolderName));
 
                 final SimulationResult result = new SimulationResult();
                 result.setTaskId(runId);
