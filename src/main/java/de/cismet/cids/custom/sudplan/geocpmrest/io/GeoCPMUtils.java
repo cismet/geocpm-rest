@@ -7,9 +7,9 @@
 ****************************************************/
 package de.cismet.cids.custom.sudplan.geocpmrest.io;
 
-import java.io.*;
 import org.apache.log4j.Logger;
 
+import java.io.*;
 
 import java.util.Properties;
 import java.util.zip.GZIPOutputStream;
@@ -46,55 +46,55 @@ public final class GeoCPMUtils {
 
     //~ Methods ----------------------------------------------------------------
 
-    
-    public static File findResultsFolder(final File baseFolder) 
-    {
-        if(! baseFolder.isDirectory())
-        {
-            throw new IllegalArgumentException("base folder " + 
-                                               baseFolder + 
-                                               " does not exist");
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   baseFolder  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     */
+    public static File findResultsFolder(final File baseFolder) {
+        if (!baseFolder.isDirectory()) {
+            throw new IllegalArgumentException("base folder "
+                        + baseFolder
+                        + " does not exist");
         }
-        
+
         // determine possible result folders
-        
+
         final File[] possibleResultFolders = baseFolder.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(final File file, final String fileName) {
-                return file.isDirectory() && fileName.matches("\\d+");
-            }
-        });
-        
+
+                    @Override
+                    public boolean accept(final File file, final String fileName) {
+                        return file.isDirectory() && fileName.matches("\\d+");
+                    }
+                });
+
         // find folder with file name representing the largest number among
         // all possible result folders
-        
-        if(possibleResultFolders.length == 0)
-        {
+
+        if (possibleResultFolders.length == 0) {
             LOG.warn("Base folder " + baseFolder + " does not contain a result folder");
             return null;
         }
-        
-        if(possibleResultFolders.length == 1)
-        {
+
+        if (possibleResultFolders.length == 1) {
             return possibleResultFolders[0];
-        }
-        else
-        {
+        } else {
             File f = possibleResultFolders[0];
-        
-            for(int i = 1; i < possibleResultFolders.length; i++)
-            {
-                if(possibleResultFolders[i].getName().compareTo(f.getName()) > 0)
-                {
+
+            for (int i = 1; i < possibleResultFolders.length; i++) {
+                if (possibleResultFolders[i].getName().compareTo(f.getName()) > 0) {
                     f = possibleResultFolders[i];
                 }
             }
-        
+
             return f;
         }
-
     }
-    
+
     /**
      * Writes a given {@link GeoCPMInput} to a newly created working directory and returns a handle to the input file.
      *
@@ -224,14 +224,12 @@ public final class GeoCPMUtils {
             output.geoCPMSubInfo = subinfo;
 
             final File resultsFolder = findResultsFolder(geocpmEinDir);
-            if(resultsFolder == null)
-            {
+            if (resultsFolder == null) {
                 final String message = "cannot find results folder in geocpm output dir: " + geocpmEinDir; // NOI18N
                 LOG.error(message);
                 throw new IllegalStateException(message);
             }
-            
-            
+
             final File geocpmInfo = new File(resultsFolder, INFO_FILE_NAME);
             checkFile(geocpmInfo);
             final GeoCPMInfo info = new GeoCPMInfo();
@@ -725,14 +723,12 @@ public final class GeoCPMUtils {
             // we did not find the running process, we check for the info file which is present when the run is finished
             if (status.getStatusDesc() == null) {
                 final File resultsFolder = findResultsFolder(workingDir);
-                if(resultsFolder == null)
-                {
+                if (resultsFolder == null) {
                     status.setStatusDesc("the run is not running anymore and no results were found, considered broken"); // NOI18N
                     status.setStatus(ExecutionStatus.BROKEN);
                     return status;
                 }
-                
-                
+
                 final File[] infoFile = resultsFolder.listFiles(new RunFinishedFilter());
 
                 assert infoFile.length < 2 : "the run finished filter does not accept more than one file"; // NOI18N

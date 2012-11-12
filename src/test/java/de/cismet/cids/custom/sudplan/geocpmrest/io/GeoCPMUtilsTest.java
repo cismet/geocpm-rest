@@ -412,13 +412,13 @@ public class GeoCPMUtilsTest {
         assertNotNull(output);
         assertNotNull(output.geoCPMInfo);
         assertNotNull(output.geoCPMInfo.content);
-        assertEquals("illegal info content", 822, output.geoCPMInfo.content.length());
+        assertEquals("illegal info content", 798, output.geoCPMInfo.content.length());
         assertNotNull(output.geoCPMMax);
         assertNotNull(output.geoCPMMax.content);
-        assertEquals("illegal max content", 10978, output.geoCPMMax.content.length());
+        assertEquals("illegal max content", 10642, output.geoCPMMax.content.length());
         assertNotNull(output.geoCPMSubInfo);
         assertNotNull(output.geoCPMSubInfo.content);
-        assertEquals("illegal subinfo content", 14, output.geoCPMSubInfo.content.length());
+        assertEquals("illegal subinfo content", 13, output.geoCPMSubInfo.content.length());
         assertNotNull(output.resultsElements);
         assertEquals("not all resultelements read", 10, output.resultsElements.size());
 
@@ -427,43 +427,43 @@ public class GeoCPMUtilsTest {
 
             switch (e.number) {
                 case 831: {
-                    assertEquals("illegal resultinfo content 831", 77, e.content.length());
+                    assertEquals("illegal resultinfo content 831", 72, e.content.length());
                     break;
                 }
                 case 835: {
-                    assertEquals("illegal resultinfo content 835", 77, e.content.length());
+                    assertEquals("illegal resultinfo content 835", 72, e.content.length());
                     break;
                 }
                 case 836: {
-                    assertEquals("illegal resultinfo content 836", 96, e.content.length());
+                    assertEquals("illegal resultinfo content 836", 90, e.content.length());
                     break;
                 }
                 case 1126: {
-                    assertEquals("illegal resultinfo content 1126", 75, e.content.length());
+                    assertEquals("illegal resultinfo content 1126", 70, e.content.length());
                     break;
                 }
                 case 1128: {
-                    assertEquals("illegal resultinfo content 1128", 75, e.content.length());
+                    assertEquals("illegal resultinfo content 1128", 70, e.content.length());
                     break;
                 }
                 case 1129: {
-                    assertEquals("illegal resultinfo content 1129", 77, e.content.length());
+                    assertEquals("illegal resultinfo content 1129", 72, e.content.length());
                     break;
                 }
                 case 1130: {
-                    assertEquals("illegal resultinfo content 1130", 77, e.content.length());
+                    assertEquals("illegal resultinfo content 1130", 72, e.content.length());
                     break;
                 }
                 case 1131: {
-                    assertEquals("illegal resultinfo content 1131", 77, e.content.length());
+                    assertEquals("illegal resultinfo content 1131", 72, e.content.length());
                     break;
                 }
                 case 1132: {
-                    assertEquals("illegal resultinfo content 1132", 75, e.content.length());
+                    assertEquals("illegal resultinfo content 1132", 70, e.content.length());
                     break;
                 }
                 case 1139: {
-                    assertEquals("illegal resultinfo content 1139", 75, e.content.length());
+                    assertEquals("illegal resultinfo content 1139", 70, e.content.length());
                     break;
                 }
                 default: {
